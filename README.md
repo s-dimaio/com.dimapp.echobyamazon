@@ -17,7 +17,7 @@ To get started with Alexa by Echo, follow these steps:
 npm install
 ```
 
-2. Start the app in Homey:
+2. Start the app in Homey Pro:
 ```sh
 homey app run
 ```
@@ -51,7 +51,7 @@ For further assistance, please open an issue on our GitHub repository.
 
 ## Contributing
 
-We welcome contributions to improve this app! Please feel free to submit pull requests or open issues for any bugs or feature requests.
+We welcome contributions to improve this app! Please feel free to submit pull requests or open issues for any bugs or feature requests but please read our [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing Guidelines](CONTRIBUTING.md) before submitting.
 
 ## Disclaimer
 

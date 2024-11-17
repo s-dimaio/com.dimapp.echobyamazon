@@ -6,19 +6,6 @@ const EchoConnect = require('./lib/EchoConnect')
 
 class MyApp extends Homey.App {
 
-  mockCookie() {
-    const Path = require('path');
-    const Fs = require('fs');
-    const cookiePath = `${Path.resolve(__dirname)}/cookie/alexa-cookie.json`;
-
-    let cookieData;
-    try {
-      cookieData = JSON.parse(Fs.readFileSync(cookiePath, 'utf8'));
-    } catch {
-      cookieData = '';
-    }
-    this.homey.settings.set('cookie', cookieData);
-  }
 
   setAppListener() {
     this.echoConnect.on('pushDisconnected', (willReconnect, reason) => {
