@@ -1,0 +1,28 @@
+{
+  "actions": [
+    {
+      "id": "echo-speak",
+      "title": {
+        "en": "Echo Speak"
+      },
+      "hint": {
+        "en": "Decide the text that your Echo will say.",
+        "it": "Scegli il testo da far procnunciare al tuo Echo."
+      },
+      "titleFormatted": {
+        "en": "Your Alexa device will say [[message]]",
+        "it": "Il tuo dispositivo Alexa dirà [[message]]"
+      },
+      "args": [
+        {
+          "type": "text",
+          "name": "message",
+          "placeholder": {
+            "en": "text here your message",
+            "it": "digita qui il tuo messaggio"
+          }
+        }
+      ]
+    }
+  ]
+}

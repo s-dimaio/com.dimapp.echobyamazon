@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="960px"
+   height="960px"
+   viewBox="0 0 960 960"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="icon.svg"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.6375"
+     inkscape:cx="480"
+     inkscape:cy="480"
+     inkscape:window-width="1368"
+     inkscape:window-height="850"
+     inkscape:window-x="-6"
+     inkscape:window-y="-6"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <title
+     id="title1">com.amazon.alexa/driver/dot4/assets/icon</title>
+  <g
+     id="com.amazon.alexa/driver/dot4/assets/icon"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd"
+     transform="matrix(0.97336066,0,0,0.97336066,12.786885,0.79918041)">
+    <path
+       d="m 480,30 c 269.51496,0 488,218.48504 488,488 0,149.73921 -67.89261,288.37028 -182.33679,380.43413 v 0 l -3.73541,3.00493 -4.69178,0.98491 C 692.44797,920.22288 588.89988,930 480,930 371.09295,930 267.54185,920.22162 182.75754,902.4199 v 0 l -4.69144,-0.98504 -3.73513,-3.00478 C 59.890882,806.3673 -8,667.73722 -8,518 -8,248.48504 210.48504,30 480,30 Z m 324.21478,797.20254 -1.6889,0.37776 c -90.88094,20.23436 -204.17816,31.56991 -323.92452,31.56991 -118.99559,0 -231.56587,-11.19711 -322.05618,-31.15467 11.50524,11.99345 23.71911,23.39506 36.60382,34.14387 v 0 l 2.556,2.11359 2.62313,0.53318 C 278.0885,880.86947 374.8803,889.81448 476.81391,890 v 0 H 480 c 104.12607,0 203.03022,-9.142 284.07852,-25.69979 v 0 l 0.20948,-0.0432 2.55777,-2.1139 c 13.17072,-10.98715 25.6405,-22.65633 37.36901,-34.94056 z m 115.25493,-221.83908 7.56155,-15.60885 C 812.79789,690.94898 666.88702,759.2691 508.4909,779.573 348.11964,800.13009 184.91566,757.19045 57.027636,684.79 c 10.741036,22.41505 42.166144,80.67821 56.496484,101.01389 93.42367,27.35386 224.45897,43.34632 365.07724,43.34632 140.97189,0 272.3999,-16.06478 366.06799,-43.63712 l -3.46317,1.25061 c 35.39148,-50.52663 66.13777,-120.087 78.26353,-181.40024 z M 480,70 C 232.57643,70 32,270.57643 32,518 c 0,50.88426 5.39604,87.10669 21.473847,133.53482 130.406593,84.78637 273.268073,117.95391 448.065483,102.62642 165.88115,-21.26337 309.38022,-82.99596 424.69743,-196.20678 1.04943,-11.85039 1.63553,-23.80086 1.74457,-35.83272 v 0 L 928,518 C 928,270.57643 727.42357,70 480,70 Z"
+       id="Combined-Shape"
+       fill="#000000"
+       fill-rule="nonzero"
+       sodipodi:nodetypes="sssccsssccsssccscscccscsscccccssccscccsscscsccss" />
+    <path
+       d="m 475.18472,48.000535 c 11.15184,0.01743 21.23091,0.459478 28.56669,1.166658 3.69386,0.356094 6.68489,0.777708 8.75425,1.248355 0.93995,0.213778 1.67782,0.432449 2.18593,0.664809 v 0 L 514.99946,60 H 434 v -8.857049 c 0.81227,-0.256127 1.54352,-0.478155 2.47464,-0.694941 2.05732,-0.478985 5.03164,-0.905966 8.70594,-1.265962 7.34334,-0.719479 17.45268,-1.164214 28.63998,-1.181523 v 0 z"
+       id="path1"
+       stroke="#000000"
+       stroke-width="2" />
+  </g>
+  <metadata
+     id="metadata1">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>com.amazon.alexa/driver/dot4/assets/icon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>

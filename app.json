@@ -1,0 +1,125 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.dimapp.echobyamazon",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "cloud",
+    "local"
+  ],
+  "name": {
+    "en": "Echo by Amazon"
+  },
+  "description": {
+    "en": "App to control Echo device"
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Simone Di Maio",
+    "email": "simone.dimaio77@gmail.com"
+  },
+  "brandColor": "#232f3e",
+  "flow": {
+    "actions": [
+      {
+        "id": "echo-speak",
+        "title": {
+          "en": "Echo Speak"
+        },
+        "hint": {
+          "en": "Decide the text that your Echo will say.",
+          "it": "Scegli il testo da far procnunciare al tuo Echo."
+        },
+        "titleFormatted": {
+          "en": "Your Alexa device will say [[message]]",
+          "it": "Il tuo dispositivo Alexa dirà [[message]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "text",
+            "name": "message",
+            "placeholder": {
+              "en": "text here your message",
+              "it": "digita qui il tuo messaggio"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "Echo Device"
+      },
+      "class": "speaker",
+      "capabilities": [
+        "volume_set"
+      ],
+      "platforms": [
+        "cloud",
+        "local"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "images": {
+        "small": "/drivers/echo/assets/images/small.png",
+        "large": "/drivers/echo/assets/images/large.png",
+        "xlarge": "/drivers/echo/assets/images/xlarge.png"
+      },
+      "pair": [
+        {
+          "id": "opening_loading",
+          "template": "loading"
+        },
+        {
+          "id": "alexa_login"
+        },
+        {
+          "id": "ending_loading",
+          "template": "loading"
+        },
+        {
+          "id": "list_my_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_my_devices"
+          }
+        },
+        {
+          "id": "add_my_devices",
+          "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "opening_loading",
+          "template": "loading"
+        },
+        {
+          "id": "alexa_repair_login"
+        },
+        {
+          "id": "ending_loading",
+          "template": "loading"
+        }
+      ],
+      "id": "echo"
+    }
+  ]
+}

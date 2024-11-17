@@ -1,0 +1,43 @@
+<style>
+  .homey-button-primary-full {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  .result-container {
+    display: block;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+</style>
+
+<button onclick="apriPaginaWeb()" class="homey-button-primary-full" data-i18n="pair.welcome.button">
+  Apri Pagina Web
+</button>
+
+<div id="resultContainer" class="result-container">
+  Result: <span id="selectedDomain"></span>
+</div>
+
+<script type="application/javascript">
+  Homey.on("amazonLogIn", function (page) {
+    document.getElementById('selectedDomain').textContent = 'ciaooooooooo';
+    document.getElementById('resultContainer').style.display = 'block';
+
+    window.open(page, '_blank');
+    });
+
+  function apriPaginaWeb() {
+    Homey.emit('initAlexa').then(function (result) {
+      // document.getElementById('selectedDomain').textContent = result;
+      // document.getElementById('resultContainer').style.display = 'block';
+      // window.open(result, '_blank');
+    });
+  }
+</script>

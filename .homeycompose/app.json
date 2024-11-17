@@ -1,0 +1,30 @@
+{
+  "id": "com.dimapp.echobyamazon",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "cloud",
+    "local"
+  ],
+  "name": {
+    "en": "Echo by Amazon"
+  },
+  "description": {
+    "en": "App to control Echo device"
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Simone Di Maio",
+    "email": "simone.dimaio77@gmail.com"
+  },
+  "brandColor": "#232f3e"
+}

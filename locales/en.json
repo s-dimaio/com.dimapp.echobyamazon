@@ -1,0 +1,9 @@
+{
+    "pair": {
+      "welcome": {
+        "title": "Login with your Amazon credential",
+        "text": "Please check if the domain is correct and then press the Log-in button. You will be redirected to your Amazon login page.",
+        "button": "Log-in"
+      }
+    }
+  }

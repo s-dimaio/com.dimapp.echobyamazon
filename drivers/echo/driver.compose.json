@@ -1,0 +1,58 @@
+{
+  "name": {
+    "en": "Echo Device"
+  },
+  "class": "speaker",
+  "capabilities": [
+    "volume_set"
+  ],
+  "platforms": [
+    "cloud",
+    "local"
+  ],
+  "connectivity": [
+    "cloud"
+  ],
+  "images": {
+    "small": "{{driverAssetsPath}}/images/small.png",
+    "large": "{{driverAssetsPath}}/images/large.png",
+    "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
+  },
+  "pair": [
+    {
+      "id": "opening_loading",
+      "template": "loading"
+    },
+    {
+      "id": "alexa_login"
+    },
+    {
+      "id": "ending_loading",
+      "template": "loading"
+    },
+    {
+      "id": "list_my_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_my_devices"
+      }
+    },
+    {
+      "id": "add_my_devices",
+      "template": "add_devices"
+    }
+  ],
+  "repair": [
+    {
+      "id": "opening_loading",
+      "template": "loading"
+    },
+    {
+      "id": "alexa_repair_login"
+    },
+    {
+      "id": "ending_loading",
+      "template": "loading"
+    }
+  ]
+}
