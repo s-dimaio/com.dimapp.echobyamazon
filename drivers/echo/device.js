@@ -23,9 +23,6 @@ class MyDevice extends Homey.Device {
     this.registerCapabilityListener("volume_set", async (value) => {
       this.log(`registerCapabilityListener - aggiorno il volume - id: ${this.getData().id} - volume: ${value * 100} - isPushConnected: ${this.homey.app.echoConnect.isPushConnected()}`)
 
-      //**** ONLY FOR TEST - TO DELETE OR COMMENT */
-      //this.homey.app.echoConnect.stopPushMessage();
-
       if (this.homey.app.echoConnect.isPushConnected()) {
         isPushMessage = false;
         await this.homey.app.echoConnect.setVolumeDevice(this.getData().id, (value * 100));
@@ -49,34 +46,36 @@ class MyDevice extends Homey.Device {
     }
   }
 
-  /**
-   * onInit is called when the device is initialized.
-   */
-  async onInit() {
-    this.log('MyDevice has been initialized - id: ' + this.getData().id + ' - isPushConnected: ' + this.homey.app.echoConnect.isPushConnected());
-
-    //const cookieData = this.homey.settings.get('cookie');
-
-    this.homey.app.setPushDisconnectedCallback((willReconnect) => {
-      this.log('setPushDisconnectedCallback: ', willReconnect);
-
-      if (!willReconnect) {
-        this.setUnavailable().catch(this.error);
-      }
-    });
-
-    //Register device listener
-    this.setDeviceListener();
-
-    //Set the initial volume of the device
-    this.homey.app.echoConnect.getVolumeDevice(this.getData().id)
+  setDeviceVolume(id) {
+    this.homey.app.echoConnect.getVolumeDevice(id)
       .then(volume => {
-        this.log(`getVolumeDevice - id: ${this.getData().id} - volume: ${volume}`)
+        this.log(`getVolumeDevice - id: ${id} - volume: ${volume}`)
 
         this.setCapabilityValue('volume_set', (volume / 100)).catch(this.error);
       })
       .catch(error => this.error(error.message));
+  }
 
+  /**
+   * onInit is called when the device is initialized.
+   */
+  async onInit() {
+    this.log('Device ' + this.getName() + ' (' + this.getData().id + ') has been initialized - isPushConnected: ' + this.homey.app.echoConnect.isPushConnected());
+
+    const cookieData = this.homey.settings.get('cookie');
+    this.log('Device - onInit - isCookieEmptyOrNull:', this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData));
+
+    if (!this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData)) {
+      //Register device listener
+      this.setDeviceListener();
+
+      //Set the initial volume of the device
+      this.setDeviceVolume(this.getData().id);
+
+    } else {
+      this.setUnavailable().catch(this.error);
+
+    }
   }
 
   async onUninit() {
@@ -101,6 +100,7 @@ class MyDevice extends Homey.Device {
    */
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log('MyDevice settings where changed');
+
   }
 
   /**

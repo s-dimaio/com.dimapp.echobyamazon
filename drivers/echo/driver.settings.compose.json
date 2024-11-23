@@ -1,0 +1,40 @@
+[
+    {
+        "type": "group",
+        "label": {
+            "en": "Device details"
+        },
+        "children": [
+            {
+                "id": "deviceFamily",
+                "type": "label",
+                "label": {
+                    "en": "Family"
+                },
+                "hint": {
+                    "en": "Family name of the device."
+                }
+            },
+            {
+                "id": "deviceType",
+                "type": "label",
+                "label": {
+                    "en": "Type"
+                },
+                "hint": {
+                    "en": "Code that identifies the device model."
+                }
+            },
+            {
+                "id": "serialNumber",
+                "type": "label",
+                "label": {
+                    "en": "Serial"
+                },
+                "hint": {
+                    "en": "Unique code that identifies the device."
+                }
+            }
+        ]
+    }
+]

@@ -75,41 +75,39 @@
 <div class="main-container">
 
     <header>
-        <h1 class="homey-title" data-i18n="pair.welcome.title">
-            <!-- This will be filled with the translated string with key 'settings.title'. -->
-        </h1>
-        <p class="homey-subtitle" data-i18n="pair.welcome.text">
-        </p>
+        <h1 class="homey-title" data-i18n="pair.welcome.title" />
+
+        <p class="homey-subtitle" data-i18n="pair.welcome.text" />
+
+        <p class="homey-subtitle" data-i18n="pair.welcome.warning" />
     </header>
 
     <div class="content-wrapper">
-
         <fieldset class="homey-form-fieldset" id="radioButtonsContainer" style="display: none;">
-
             <div class="homey-form-group">
                 <fieldset class="homey-form-radio-set">
-                    <legend class="homey-form-radio-set-title">Change your amazon account domain:</legend>
+                    <legend class="homey-form-radio-set-title" data-i18n="pair.radio.title" />
 
                     <label class="homey-form-radio">
                         <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.com" />
-                        <span class="homey-form-radio-checkmark"></span>
-                        <span class="homey-form-radio-text">amazon.com</span>
+                        <span class="homey-form-radio-checkmark" />
+                        <span class="homey-form-radio-text" data-i18n="pair.radio.com" />
                     </label>
 
                     <label class="homey-form-radio">
                         <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.co.jp" />
-                        <span class="homey-form-radio-checkmark"></span>
-                        <span class="homey-form-radio-text">amazon.co.jp (for Japanese accounts only)</span>
+                        <span class="homey-form-radio-checkmark" />
+                        <span class="homey-form-radio-text" data-i18n="pair.radio.jp" />
                     </label>
                 </fieldset>
             </div>
         </fieldset>
 
-        <button onclick="apriPaginaWeb()" class="homey-button-primary-full" data-i18n="pair.welcome.button" \>
+        <button onclick="apriPaginaWeb()" class="homey-button-primary-full" data-i18n="pair.button" />
     </div>
 
     <div class="domain-info">
-        Amazon domain:&nbsp;<span id="selectedDomain"></span> <a href="#" id="toggleRadioButtons">Edit</a>
+        <span data-i18n="pair.domain.text" />&nbsp;<span id="selectedDomain" /><a href="#" id="toggleRadioButtons" data-i18n="pair.domain.link" />
     </div>
 </div>
 
@@ -148,6 +146,7 @@
 
     function updateSelectedDomain(domain) {
         document.getElementById('selectedDomain').textContent = domain;
+        //Homey.__("pair.domain.text", { name: domain });
     }
 
     document.getElementById('toggleRadioButtons').addEventListener('click', function (e) {

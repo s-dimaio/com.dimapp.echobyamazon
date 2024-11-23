@@ -10,10 +10,23 @@ class MyDriver extends Homey.Driver {
       console.error('arrayDevices non è definito');
       return [];
     }
+
+          // await this.setSettings({
+      //   // only provide keys for the settings you want to change
+      //   deviceFamily: "Jane Doe",
+      //   deviceType: "Jane Doe",
+      //   serialNumber: "Jane Doe"
+      // });
+
     return arrayDevices.map(device => ({
       name: device.name,
       data: {
         id: device.serial
+      },
+      settings: {
+        deviceFamily: device.family,
+        deviceType: device.type,
+        serialNumber: device.serial
       },
       icon: device.getIcon()
     }));
@@ -47,6 +60,7 @@ class MyDriver extends Homey.Driver {
     // Argument session is a PairSocket, similar to Driver.onPair
     // Argument device is a Homey.Device that's being repaired
 
+    // Manages the AmazonPage radio button changes
     session.setHandler("amazonPage", async (amazonPage) => {
       this.log('amazonPage called: ', amazonPage);
       this.homey.settings.set('amazonPage', amazonPage);
@@ -91,28 +105,48 @@ class MyDriver extends Homey.Driver {
           const cookieData = this.homey.settings.get('cookie');
           const amazonPage = this.homey.settings.get('amazonPage');
 
-          // Set AlexaConnected callback to show devies list
-          this.homey.app.setAlexaConnectedCallback(() => {
-            this.log('device id ' + device.getData().id + ' - repaired')
+          try {
+            const isAuthenticated = await this.homey.app.echoConnect.isAuthenticated();
+            if (isAuthenticated) {
+              this.log('You are already authenticated on Alexa servers');
 
-            device.setDeviceListener();
-            device.setAvailable().catch(this.error);
+              const isPushConnected = this.homey.app.echoConnect.isPushConnected();
 
-            session.done()
-          });
+              if (isPushConnected === false) {
+                this.log('initPushMessage called!')
+                this.homey.app.echoConnect.initPushMessage()
+              }
 
-          await this.homey.app.echoConnect.initAlexa({
-            cookieData: cookieData,
-            amazonPage: amazonPage,
-            closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
-          });
+              device.setAvailable().catch(this.error);
+              session.done();
+
+            } else {
+              this.log('You need to re-authenticate.');
+
+              // Set AlexaConnected callback to show devices list
+              this.homey.app.setAlexaConnectedCallback(() => {
+                this.log('device id ' + device.getData().id + ' - repaired');
+                //device.setDeviceListener();
+                device.setAvailable().catch(this.error);
+                session.done();
+              });
+
+              await this.homey.app.echoConnect.initAlexa({
+                cookieData: cookieData,
+                amazonPage: amazonPage,
+                closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
+              });
+            }
+          } catch (error) {
+            this.error('An error occurred:', error);
+            await session.showView('alexa_repair_login');
+          }
+
         } catch (err) {
           this.error('Error initializing Alexa: ', err);
-
           await session.showView('alexa_repair_login');
         }
       }
-
     });
 
     session.setHandler("my_event", (data) => {
@@ -121,12 +155,15 @@ class MyDriver extends Homey.Driver {
 
     session.setHandler("disconnect", () => {
       this.log('onRepair - disconnect called')
-      // Cleanup
+
+      device.setDeviceVolume(device.getData().id);
     });
   }
 
 
   onPair(session) {
+
+    // Manages the AmazonPage radio button changes
     session.setHandler("amazonPage", async (amazonPage) => {
       this.log('amazonPage called: ', amazonPage);
       this.homey.settings.set('amazonPage', amazonPage);
@@ -139,8 +176,8 @@ class MyDriver extends Homey.Driver {
         });
 
         await this.homey.app.echoConnect.initAlexa({
-          cookieData: '', 
-          amazonPage: amazonPage, 
+          cookieData: '',
+          amazonPage: amazonPage,
           forceToken: true,
           closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
         });
@@ -177,27 +214,49 @@ class MyDriver extends Homey.Driver {
         });
       }
 
+
       if (view === 'opening_loading') {
         try {
           const cookieData = this.homey.settings.get('cookie');
           const amazonPage = this.homey.settings.get('amazonPage');
 
-          // Set AlexaConnected callback to show devies list
-          this.homey.app.setAlexaConnectedCallback(() => {
-            //Show devices list
-            session.showView('list_my_devices');
-          });
+          try {
+            const isAuthenticated = await this.homey.app.echoConnect.isAuthenticated();
+            if (isAuthenticated) {
+              this.log('You are already authenticated on Alexa servers');
 
-          this.log('isPushConnected:', this.homey.app.echoConnect.isPushConnected());
+              const isPushConnected = this.homey.app.echoConnect.isPushConnected();
+              this.log('isPushConnected: ', isPushConnected);
 
-          await this.homey.app.echoConnect.initAlexa({
-            cookieData: cookieData, 
-            amazonPage: amazonPage,
-            closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
-          });
+              if (isPushConnected === false) {
+                this.log('initPushMessage called!')
+                this.homey.app.echoConnect.initPushMessage()
+              }
+
+              //Show devices list
+              session.showView('list_my_devices');
+            } else {
+              this.log('You need to re-authenticate.');
+
+              // Set AlexaConnected callback to show devies list
+              this.homey.app.setAlexaConnectedCallback(() => {
+                //Show devices list
+                session.showView('list_my_devices');
+              });
+
+              await this.homey.app.echoConnect.initAlexa({
+                cookieData: cookieData,
+                amazonPage: amazonPage,
+                closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
+              });
+            }
+          } catch (error) {
+            this.error('An error occurred:', error);
+            await session.showView('alexa_login');
+          }
+
         } catch (err) {
           this.error('Error initializing Alexa: ', err);
-
           await session.showView('alexa_login');
         }
       }

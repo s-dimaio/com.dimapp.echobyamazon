@@ -9,11 +9,16 @@ class MyApp extends Homey.App {
 
   setAppListener() {
     this.echoConnect.on('pushDisconnected', (willReconnect, reason) => {
-      this.log('App - pushDisconnected listener');
+      this.log('App - pushDisconnected listener - willReconnect:', willReconnect);
 
-      // Execute callback if it has been set
-      if (this.pushDisconnectedCallback) {
-        this.pushDisconnectedCallback(willReconnect);
+      if (!willReconnect) {
+        const devices = this.homey.drivers.getDriver('echo').getDevices();
+
+        devices.forEach((device, index) => {
+          this.log('App - pushDisconnected listener - Try to disable', device.getName());
+
+          device.setUnavailable().catch(this.error);
+        });
       }
     });
 
@@ -21,10 +26,10 @@ class MyApp extends Homey.App {
       this.log('App - alexaConnected listener - Inizializzazione completata - dispositivi trovati:', devArray.length);
 
       const isPushConnected = this.echoConnect.isPushConnected();
-      this.log('isPushConnected: ', isPushConnected);
+      this.log('App - alexaConnected listener - isPushConnected: ', isPushConnected);
 
       if (isPushConnected === false) {
-        this.log('initPushMessage called!')
+        this.log('App - alexaConnected listener - initPushMessage called!')
         this.echoConnect.initPushMessage()
       }
 
@@ -46,51 +51,54 @@ class MyApp extends Homey.App {
     this.alexaConnectedCallback = callback;
   }
 
-  setPushDisconnectedCallback(callback) {
-    this.pushDisconnectedCallback = callback;
-  }
-
   /**
    * onInit is called when the app is initialized.
    */
   async onInit() {
-    this.log('MyApp has been initialized');
+    this.log('App - onInit - MyApp has been initialized');
 
     this.echoConnect = new EchoConnect();
     this.setAppListener();
 
     this.homey.settings.set('amazonPage', 'amazon.com');
 
-    //******** resetto il cookie setting per test ***********
-    //this.homey.settings.unset('cookie');
-    //this.mockCookie();
-    //*** */
 
-
-    /*
-Se non funziona riportare in driver.js
-//*** */
     const cookieData = this.homey.settings.get('cookie');
     const amazonPage = this.homey.settings.get('amazonPage');
 
+    this.log('App - onInit - isCookieEmptyOrNull:', this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData));
+
     if (!this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData)) {
       try {
-        await this.homey.app.echoConnect.initAlexa({
-          cookieData: cookieData,
-          amazonPage: amazonPage,
-          closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
-        });
-      } catch (err) {
-        this.error('onInit - Errore durante l\'inizializzazione:', err);
+        const isAuthenticated = await this.homey.app.echoConnect.isAuthenticated();
+        if (isAuthenticated) {
+          this.log('App - onInit - You are already authenticated on Alexa servers');
+
+          const isPushConnected = this.echoConnect.isPushConnected();
+          this.log('App - onInit - isPushConnected: ', isPushConnected);
+
+          if (isPushConnected === false) {
+            this.log('App - onInit - initPushMessage called!')
+            this.echoConnect.initPushMessage()
+          }
+
+        } else {
+          this.log('App - onInit - You need to re-authenticate.');
+
+          await this.homey.app.echoConnect.initAlexa({
+            cookieData: cookieData,
+            amazonPage: amazonPage,
+            closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
+          });
+        }
+      } catch (error) {
+        this.error('App - onInit - Error during initialization:', error);
       }
     }
-    //*** */
-
-
   }
 
   async onUninit() {
-    this.log('App - onUninit has been called');
+    this.log('App - onUninit - onUninit has been called');
 
   }
 }
