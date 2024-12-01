@@ -60,11 +60,14 @@ class MyApp extends Homey.App {
     this.echoConnect = new EchoConnect();
     this.setAppListener();
 
-    this.homey.settings.set('amazonPage', 'amazon.com');
-
 
     const cookieData = this.homey.settings.get('cookie');
-    const amazonPage = this.homey.settings.get('amazonPage');
+
+    let amazonPage = this.homey.settings.get('amazonPage');
+    if (amazonPage === null || amazonPage === undefined || amazonPage === '') {
+      amazonPage = 'amazon.de';
+      this.homey.settings.set('amazonPage', amazonPage);
+    }
 
     this.log('App - onInit - isCookieEmptyOrNull:', this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData));
 

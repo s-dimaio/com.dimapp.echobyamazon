@@ -6,14 +6,19 @@
       "warning": "To log in you must be connected to the same Wi-Fi network as Homey Pro."
     },
     "radio": {
-      "title": "Change your amazon account domain:",
-      "com": "amazon.com",
-      "jp": "amazon.co.jp (for Japanese accounts only)"
+      "title": "Change your Amazon account domain:",
+      "de": "amazon.de (Europe)",
+      "com": "amazon.com (North America)",
+      "jp": "amazon.co.jp (Far East)"
     },
     "button": "Log-in",
     "domain": {
       "text": "Amazon domain:",
       "link": "Edit"
     }
+  },
+  "settings": {
+    "title": "My Settings Page",
+    "subtitle": "Please log in"
   }
 }

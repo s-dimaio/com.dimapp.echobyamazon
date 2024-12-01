@@ -1,0 +1,24 @@
+{
+  "pair": {
+    "welcome": {
+      "title": "Accedi con le tue credenziali Amazon",
+      "text": "Controlla se il dominio è corretto e poi premi il pulsante Accedi. Sarai reindirizzato alla tua pagina di accesso Amazon.",
+      "warning": "Per accedere, devi essere connesso alla stessa rete Wi-Fi di Homey Pro."
+    },
+    "radio": {
+      "title": "Cambia il dominio del tuo account Amazon:",
+      "de": "amazon.de (Europa)",
+      "com": "amazon.com (Nord America)",
+      "jp": "amazon.co.jp (Estremo Oriente)"
+    },
+    "button": "Accedi",
+    "domain": {
+      "text": "Dominio Amazon:",
+      "link": "Modifica"
+    },
+    "settings": {
+      "title": "La mia pagina delle impostazioni",
+      "subtitle": "Per favore, accedi"
+    }
+  }
+}

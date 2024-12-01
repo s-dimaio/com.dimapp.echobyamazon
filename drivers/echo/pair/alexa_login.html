@@ -89,6 +89,12 @@
                     <legend class="homey-form-radio-set-title" data-i18n="pair.radio.title" />
 
                     <label class="homey-form-radio">
+                        <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.de" />
+                        <span class="homey-form-radio-checkmark" />
+                        <span class="homey-form-radio-text" data-i18n="pair.radio.de" />
+                    </label>
+
+                    <label class="homey-form-radio">
                         <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.com" />
                         <span class="homey-form-radio-checkmark" />
                         <span class="homey-form-radio-text" data-i18n="pair.radio.com" />
@@ -129,7 +135,8 @@
     });
 
     function apriPaginaWeb() {
-        window.open(loginUrl, '_blank');
+        //window.open(loginUrl, '_blank');
+        Homey.popup(loginUrl);
 
         Homey.showView("ending_loading");
     }

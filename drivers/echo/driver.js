@@ -4,19 +4,12 @@ const Homey = require('homey');
 
 class MyDriver extends Homey.Driver {
 
-  // Crea un Json con il formato accettato da Homey per i devices
+  // Create a Json with the format accepted by Homey for devices
   formatDevicesForHomey(arrayDevices) {
     if (!arrayDevices) {
       console.error('arrayDevices non è definito');
       return [];
     }
-
-          // await this.setSettings({
-      //   // only provide keys for the settings you want to change
-      //   deviceFamily: "Jane Doe",
-      //   deviceType: "Jane Doe",
-      //   serialNumber: "Jane Doe"
-      // });
 
     return arrayDevices.map(device => ({
       name: device.name,
@@ -32,23 +25,89 @@ class MyDriver extends Homey.Driver {
     }));
   }
 
+  async speakEcho(id, text, type = 'speak') {
+    this.log(`Driver - speakEcho - id: ${id} - message: ${text} - type: ${type} - isPushConnected: ${this.homey.app.echoConnect.isPushConnected()}`);
+
+    if (this.homey.app.echoConnect.isPushConnected()) {
+      this.homey.app.echoConnect.speakEcho(id, text, type);
+
+    } else {
+      this.setUnavailable().catch(this.error);
+
+    }
+  }
+
+  async sendAlexaCommand(id, command) {
+    this.log(`Driver - sendAlexaCommand - id: ${id} with message: ${command} - isPushConnected: ${this.homey.app.echoConnect.isPushConnected()}`);
+
+    if (this.homey.app.echoConnect.isPushConnected()) {
+      this.homey.app.echoConnect.executeAlexaCommand(id, command);
+
+    } else {
+      this.setUnavailable().catch(this.error);
+
+    }
+  }
+
+  setEchoFlowActionCard() {
+    // Set 'echo-speak' flow card
+    const speakActionCard = this.homey.flow.getActionCard('echo-speak');
+    speakActionCard.registerRunListener(async (args) => {
+      //throw new Error ('Test Error!! oops');
+
+      const message = args.message;
+
+      this.log(`Driver - setEchoFlowActionCard - echo-speak flow message: ${message}`);
+
+      try {
+        // ** It might be appropriate to use 'await'? **//
+        this.speakEcho(args.device.getData().id, message)
+      } catch (err) {
+        throw new Error(err);
+      }
+    });
+
+    // Set 'echo-announcement' flow card
+    const announcementActionCard = this.homey.flow.getActionCard('echo-announcement');
+    announcementActionCard.registerRunListener(async (args) => {
+      const announcement = args.announcement;
+
+      this.log(`Driver - setEchoFlowActionCard - echo-announcement flow message: ${announcement}`);
+
+      // ** It might be appropriate to use 'await'? **//
+      this.speakEcho(args.device.getData().id, announcement, 'announce')
+    });
+
+    // Set 'echo-whisper' flow card
+    const whisperActionCard = this.homey.flow.getActionCard('echo-whisper');
+    whisperActionCard.registerRunListener(async (args) => {
+      const message = args.message;
+
+      this.log(`Driver - setEchoFlowActionCard - echo-whisper flow message: ${message}`);
+
+      // ** It might be appropriate to use 'await'? **//
+      this.speakEcho(args.device.getData().id, message, 'whisper');
+    });
+
+    // Set 'alexa-command' flow card
+    const alexaCommandActionCard = this.homey.flow.getActionCard('alexa-command');
+    alexaCommandActionCard.registerRunListener(async (args) => {
+      const command = args.command;
+
+      this.log(`Driver - setEchoFlowActionCard - alexa-command flow message: ${command}`);
+
+      // ** It might be appropriate to use 'await'? **//
+      this.sendAlexaCommand(args.device.getData().id, command);
+    });
+  }
+
   /**
    * onInit is called when the driver is initialized.
    */
   async onInit() {
     this.log('onInit - MyDriver has been initialized');
 
-    const speakActionCard = this.homey.flow.getActionCard('echo-speak');
-    speakActionCard.registerRunListener(async (args) => {
-      //const {message} = args;
-      const message = args.message;
-
-      this.log(`flow message: ${message}`);
-      //this.log(`flow message: ${message} - id: ${args.device.getData().id}`);
-
-      await args.device.speakEcho(message);
-    });
-
+    this.setEchoFlowActionCard();
   }
 
   async onUninit() {

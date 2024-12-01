@@ -34,18 +34,6 @@ class MyDevice extends Homey.Device {
     });
   }
 
-  async speakEcho(text) {
-    this.log(`speak echo id: ${this.getData().id} with message: ${text} - isPushConnected: ${this.homey.app.echoConnect.isPushConnected()}`);
-
-    if (this.homey.app.echoConnect.isPushConnected()) {
-      this.homey.app.echoConnect.speakEcho(this.getData().id, text)
-
-    } else {
-      this.setUnavailable().catch(this.error);
-
-    }
-  }
-
   setDeviceVolume(id) {
     this.homey.app.echoConnect.getVolumeDevice(id)
       .then(volume => {

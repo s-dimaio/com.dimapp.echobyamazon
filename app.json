@@ -36,7 +36,7 @@
           "en": "Echo Speak"
         },
         "hint": {
-          "en": "Decide the text that your Echo will say.",
+          "en": "Choose the text that your Echo will say.",
           "it": "Scegli il testo da far procnunciare al tuo Echo."
         },
         "titleFormatted": {
@@ -55,6 +55,93 @@
             "placeholder": {
               "en": "text here your message",
               "it": "digita qui il tuo messaggio"
+            }
+          }
+        ]
+      },
+      {
+        "id": "echo-announcement",
+        "title": {
+          "en": "Echo Announcement"
+        },
+        "hint": {
+          "en": "Choose the text of the announcement.",
+          "it": "Scegli il testo dell'annuncio."
+        },
+        "titleFormatted": {
+          "en": "Your Alexa device will announce [[announcement]]",
+          "it": "Il tuo dispositivo Alexa farà l'annuncio [[announcement]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "text",
+            "name": "announcement",
+            "placeholder": {
+              "en": "text here the announcement text",
+              "it": "digita qui il testo dell'annuncio."
+            }
+          }
+        ]
+      },
+      {
+        "id": "echo-whisper",
+        "title": {
+          "en": "Echo Whisper"
+        },
+        "hint": {
+          "en": "Choose the text that your Echo will whisper.",
+          "it": "Scegli il testo che il tuo Echo sussurrerà."
+        },
+        "titleFormatted": {
+          "en": "Your Alexa device will whisper [[message]]",
+          "it": "Il tuo dispositivo Alexa sussurrerà [[message]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "text",
+            "name": "message",
+            "placeholder": {
+              "en": "text here your message",
+              "it": "digita qui il tuo messaggio"
+            }
+          }
+        ]
+      },
+      {
+        "id": "alexa-command",
+        "title": {
+          "en": "Alexa Command"
+        },
+        "hint": {
+          "en": "Type a command for Alexa.",
+          "it": "Digita un commando per Alexa."
+        },
+        "titleFormatted": {
+          "en": "Run the command [[command]]",
+          "it": "Esegui il comando [[command]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "text",
+            "name": "command",
+            "placeholder": {
+              "en": "text here a Alexa command",
+              "it": "Digita qui un commando per Alexa"
             }
           }
         ]
@@ -134,7 +221,7 @@
                 "en": "Family"
               },
               "hint": {
-                "en": "The name of the user."
+                "en": "Family name of the device."
               }
             },
             {
@@ -144,7 +231,7 @@
                 "en": "Type"
               },
               "hint": {
-                "en": "The password of the user."
+                "en": "Code that identifies the device model."
               }
             },
             {
@@ -154,7 +241,7 @@
                 "en": "Serial"
               },
               "hint": {
-                "en": "The password of the user."
+                "en": "Unique code that identifies the device."
               }
             }
           ]
