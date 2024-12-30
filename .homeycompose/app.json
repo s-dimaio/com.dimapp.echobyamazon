@@ -1,6 +1,6 @@
 {
   "id": "com.dimapp.echobyamazon",
-  "version": "1.1.0",
+  "version": "2.0.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -26,5 +26,11 @@
     "name": "Simone Di Maio",
     "email": "simone.dimaio77@gmail.com"
   },
-  "brandColor": "#232f3e"
+  "brandColor": "#232f3e",
+  "api": {
+    "createDevicesFile": {
+      "method": "POST",
+      "path": "/createDevicesFile"
+    }
+  }
 }

@@ -5,7 +5,7 @@ const Homey = require('homey');
 class MyDriver extends Homey.Driver {
 
   // Create a Json with the format accepted by Homey for devices
-  formatDevicesForHomey(arrayDevices) {
+  _formatDevicesForHomey(arrayDevices) {
     if (!arrayDevices) {
       console.error('arrayDevices non è definito');
       return [];
@@ -25,79 +25,332 @@ class MyDriver extends Homey.Driver {
     }));
   }
 
-  async speakEcho(id, text, type = 'speak') {
-    this.log(`Driver - speakEcho - id: ${id} - message: ${text} - type: ${type} - isPushConnected: ${this.homey.app.echoConnect.isPushConnected()}`);
+  /**
+   * Executes various Alexa actions on a specified Echo device.
+   * 
+   * @async
+   * @param {string} id - The unique identifier of the Echo device.
+   * @param {string} content - The content to be processed (e.g., text to speak, command to execute, routine name).
+   * @param {'speak' | 'announce' | 'whisper' | 'command' | 'routine' | 'notification'} action - The type of action to perform.
+   * @throws {Error} Throws an error if the action is not supported or if there's an issue executing the action.
+   * @returns {Promise<any>} A promise that resolves with the result of the action, if any.
+   * 
+   * @example
+   * // Make Alexa speak
+   * await executeEchoAction('device123', 'Hello, how are you?', 'speak');
+   * 
+   * // Execute an Alexa command
+   * await executeEchoAction('device123', 'What's the weather like?', 'command');
+   * 
+   * // Start a routine
+   * await executeEchoAction('device123', 'MorningRoutine', 'routine');
+   */
+  async executeEchoAction(id, content, action) {
+    this.log(`Driver - executeEchoAction - id: ${id} - content: ${content} - action: ${action}`);
 
-    if (this.homey.app.echoConnect.isPushConnected()) {
-      this.homey.app.echoConnect.speakEcho(id, text, type);
+    try {
+      let result;
+      switch (action) {
+        case 'speak':
+        case 'announce':
+        case 'whisper':
+          result = await this.homey.app.echoConnect.speakEcho(id, content, action);
+          break;
+        case 'command':
+          result = await this.homey.app.echoConnect.executeAlexaCommand(id, content);
+          break;
+        case 'routine':
+          result = await this.homey.app.echoConnect.executeAutomationRoutine(id, content);
+          break;
+        case 'notification':
+          const localTime = new Date().toLocaleString(undefined, { timeZone: this.homey.clock.getTimezone() });
+          //result = await this.homey.app.echoConnect.createAlexaNotification(id, 'Reminder', content, new Date().getTime() + ((60 * 60 * 1000) + 5000), "ON");
+          result = await this.homey.app.echoConnect.createAlexaNotification(id, 'Reminder', content, new Date(localTime).getTime() + 5000, "ON");
+          break;
+        default:
+          this.error(`Action not supported: ${action}`);
+      }
+      return result;
 
-    } else {
-      this.setUnavailable().catch(this.error);
-
+    } catch (error) {
+      this.error(`Error while running ${action}:`, error.message);
+      throw error;
     }
   }
 
-  async sendAlexaCommand(id, command) {
-    this.log(`Driver - sendAlexaCommand - id: ${id} with message: ${command} - isPushConnected: ${this.homey.app.echoConnect.isPushConnected()}`);
-
-    if (this.homey.app.echoConnect.isPushConnected()) {
-      this.homey.app.echoConnect.executeAlexaCommand(id, command);
-
-    } else {
-      this.setUnavailable().catch(this.error);
-
-    }
-  }
-
-  setEchoFlowActionCard() {
+  _setEchoFlowActionCard() {
     // Set 'echo-speak' flow card
     const speakActionCard = this.homey.flow.getActionCard('echo-speak');
     speakActionCard.registerRunListener(async (args) => {
-      //throw new Error ('Test Error!! oops');
-
+      const serial = args.device.getData().id;
       const message = args.message;
+
+      if (message.trim().length === 0) {
+        this.error('Driver - speakActionCard - message is empty');
+        throw new Error(this.homey.__("error.messageEmpty"));
+      }
 
       this.log(`Driver - setEchoFlowActionCard - echo-speak flow message: ${message}`);
 
       try {
-        // ** It might be appropriate to use 'await'? **//
-        this.speakEcho(args.device.getData().id, message)
-      } catch (err) {
-        throw new Error(err);
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+
+        if (isConnected) {
+          await this.executeEchoAction(serial, message, 'speak');
+          this.log('Message spoken successfully');
+        } else {
+          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        }
+      } catch (error) {
+        switch (error?.code) {
+          case 'ERROR_SPEAK':
+            this.error('Error speaking message:', error?.message);
+            throw new Error(this.homey.__("error.generic"));
+
+          case 'ERROR_INIT':
+          case 'ERROR_PUSH':
+          case 'ERROR_AUTHENTICATION':
+            this.error(`Authentication - ${error?.message}`);
+            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+            break;
+
+          default:
+            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
+        }
       }
     });
 
     // Set 'echo-announcement' flow card
     const announcementActionCard = this.homey.flow.getActionCard('echo-announcement');
     announcementActionCard.registerRunListener(async (args) => {
+      const serial = args.device.getData().id;
       const announcement = args.announcement;
+
+      if (announcement.trim().length === 0) {
+        this.error('Driver - announcementActionCard - announcement is empty');
+        throw new Error(this.homey.__("error.announcementEmpty"));
+      }
 
       this.log(`Driver - setEchoFlowActionCard - echo-announcement flow message: ${announcement}`);
 
-      // ** It might be appropriate to use 'await'? **//
-      this.speakEcho(args.device.getData().id, announcement, 'announce')
+      try {
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+
+        if (isConnected) {
+          await this.executeEchoAction(serial, announcement, 'announce');
+          this.log('Anouncement spoken successfully');
+        } else {
+          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        }
+      } catch (error) {
+        switch (error?.code) {
+          case 'ERROR_SPEAK':
+            this.error('Error speaking announcement:', error?.message);
+            throw new Error(this.homey.__("error.generic"));
+
+          case 'ERROR_INIT':
+          case 'ERROR_PUSH':
+          case 'ERROR_AUTHENTICATION':
+            this.error(`Authentication - ${error?.message}`);
+            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+            break;
+
+          default:
+            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
+        }
+      }
     });
 
     // Set 'echo-whisper' flow card
     const whisperActionCard = this.homey.flow.getActionCard('echo-whisper');
     whisperActionCard.registerRunListener(async (args) => {
+      const serial = args.device.getData().id;
       const message = args.message;
+
+      if (message.trim().length === 0) {
+        this.error('Driver - whisperActionCard - message is empty');
+        throw new Error(this.homey.__("error.messageEmpty"));
+      }
 
       this.log(`Driver - setEchoFlowActionCard - echo-whisper flow message: ${message}`);
 
-      // ** It might be appropriate to use 'await'? **//
-      this.speakEcho(args.device.getData().id, message, 'whisper');
+      try {
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+
+        if (isConnected) {
+          await this.executeEchoAction(serial, message, 'whisper');
+          this.log('Message whispered successfully');
+        } else {
+          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        }
+      } catch (error) {
+        switch (error?.code) {
+          case 'ERROR_SPEAK':
+            this.error('Error whispering message:', error?.message);
+            throw new Error(this.homey.__("error.generic"));
+
+          case 'ERROR_INIT':
+          case 'ERROR_PUSH':
+          case 'ERROR_AUTHENTICATION':
+            this.error(`Authentication - ${error?.message}`);
+            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+            break;
+
+          default:
+            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
+        }
+      }
     });
 
     // Set 'alexa-command' flow card
     const alexaCommandActionCard = this.homey.flow.getActionCard('alexa-command');
     alexaCommandActionCard.registerRunListener(async (args) => {
+      const serial = args.device.getData().id;
       const command = args.command;
+
+      if (command.trim().length === 0) {
+        this.error('Driver - alexaCommandActionCard - command is empty');
+        throw new Error(this.homey.__("error.commandEmpty"));
+      }
 
       this.log(`Driver - setEchoFlowActionCard - alexa-command flow message: ${command}`);
 
-      // ** It might be appropriate to use 'await'? **//
-      this.sendAlexaCommand(args.device.getData().id, command);
+      try {
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+
+        if (isConnected) {
+          await this.executeEchoAction(serial, command, 'command');
+          this.log('Command sent successfully');
+        } else {
+          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        }
+      } catch (error) {
+        switch (error?.code) {
+          case 'ERROR_COMMAND':
+            this.error('Error sending command:', error?.message);
+            throw new Error(this.homey.__("error.generic"));
+
+          case 'ERROR_INIT':
+          case 'ERROR_PUSH':
+          case 'ERROR_AUTHENTICATION':
+            this.error(`Authentication - ${error?.message}`);
+            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+            break;
+
+          default:
+            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
+        }
+      }
+    });
+
+    // Set 'alexa-routines' flow card
+    const alexaRoutinesActionCard = this.homey.flow.getActionCard("alexa-routines");
+    alexaRoutinesActionCard.registerArgumentAutocompleteListener(
+      "routine",
+      async (query, args) => {
+        try {
+          const echoRoutines = await this.homey.app.echoConnect.getRoutinesList();
+          const results = echoRoutines.map(item => ({
+            name: item.name,
+            id: {
+              automationId: item.automationId,
+              sequence: item.sequence
+            }
+          }));
+
+          this.log('echoRoutinesFlow:', JSON.stringify(results, null, 2));
+
+          // filter based on the query
+          return results.filter((result) => {
+            return result.name.toLowerCase().includes(query.toLowerCase());
+          });
+
+        } catch (error) {
+          console.error("Error getting routines:", error);
+          return [];
+        }
+      }
+    );
+    alexaRoutinesActionCard.registerRunListener(async (args) => {
+      const serial = args.device.getData().id;
+      const routineId = args.routine.id;
+      const name = args.routine.name;
+
+      if (routineId.trim().length === 0) {
+        this.error('Driver - alexaRoutinesActionCard - routineId is empty');
+        throw new Error(this.homey.__("error.routineEmpty"));
+      }
+
+      this.log(`Driver - setEchoFlowActionCard - alexa-routines flow message: ${routineId}`);
+
+      try {
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+
+        if (isConnected) {
+          await this.executeEchoAction(serial, routineId, 'routine');
+          this.log('Routine command sent successfully');
+        } else {
+          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        }
+      } catch (error) {
+        switch (error?.code) {
+          case 'ERROR_ROUTINE':
+            this.error('Error calling routine:', error?.message);
+            throw new Error(this.homey.__("error.generic"));
+
+          case 'ERROR_INIT':
+          case 'ERROR_PUSH':
+          case 'ERROR_AUTHENTICATION':
+            this.error(`Authentication - ${error?.message}`);
+            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+            break;
+
+          default:
+            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
+        }
+      }
+    });
+
+    // Set 'alexa-notification' flow card
+    const alexaNotificationActionCard = this.homey.flow.getActionCard('alexa-notification');
+    alexaNotificationActionCard.registerRunListener(async (args) => {
+      const serial = args.device.getData().id;
+      const message = args.message;
+
+      if (message.trim().length === 0) {
+        this.error('Driver - alexaNotificationActionCard - message is empty');
+        throw new Error(this.homey.__("error.reminderEmpty"));
+      }
+
+      this.log(`Driver - setEchoFlowActionCard - alexa-notification flow message: ${message}`);
+
+      try {
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+
+        if (isConnected) {
+          await this.executeEchoAction(serial, message, 'notification');
+          this.log('Notification sent successfully');
+        } else {
+          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        }
+
+      } catch (error) {
+        switch (error?.code) {
+          case 'ERROR_NOTIFICATION':
+            this.error('Error sending notification:', error?.message);
+            throw new Error(this.homey.__("error.generic"));
+
+          case 'ERROR_INIT':
+          case 'ERROR_PUSH':
+          case 'ERROR_AUTHENTICATION':
+            this.error(`Authentication - ${error?.message}`);
+            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+            break;
+
+          default:
+            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
+        }
+      }
     });
   }
 
@@ -107,7 +360,7 @@ class MyDriver extends Homey.Driver {
   async onInit() {
     this.log('onInit - MyDriver has been initialized');
 
-    this.setEchoFlowActionCard();
+    this._setEchoFlowActionCard();
   }
 
   async onUninit() {
@@ -252,7 +505,7 @@ class MyDriver extends Homey.Driver {
       this.log('onPair - ListDevices called');
 
       try {
-        const devices = this.formatDevicesForHomey(this.homey.app.echoConnect.arrayDevices);
+        const devices = this._formatDevicesForHomey(this.homey.app.echoConnect.arrayDevices);
         this.log('Devices formatati:', devices);
 
         return devices;

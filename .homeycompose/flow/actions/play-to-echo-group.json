@@ -1,0 +1,23 @@
+{
+  "title": {
+    "en": "Play to Echo group"
+  },
+  "hint": {
+    "en": "Play to Echo group",
+    "it": "Riproduci in un gruppo"
+  },
+  "titleFormatted": {
+        "en": "Play to the group [[group]]",
+        "it": "Riproduci nel gruppo [[group]]"
+      },
+  "args": [
+    {
+      "type": "autocomplete",
+      "name": "group",
+      "placeholder": {
+        "en": "Text here the name of the group",
+        "it": "Digita il nome del gruppo"
+      }
+    }
+  ]
+}

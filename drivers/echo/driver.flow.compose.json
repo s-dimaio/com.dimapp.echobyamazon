@@ -90,8 +90,57 @@
           "type": "text",
           "name": "command",
           "placeholder": {
-            "en": "text here a Alexa command",
+            "en": "Text here an Alexa command",
             "it": "Digita qui un commando per Alexa"
+          }
+        }
+      ]
+    },
+    {
+      "id": "alexa-routines",
+      "title": {
+        "en": "Alexa routines"
+      },
+      "hint": {
+        "en": "Start an Alexa routine.",
+        "it": "Avvia una routine di Alexa."
+      },
+      "titleFormatted": {
+        "en": "Run the routine [[routine]]",
+        "it": "Esegui la routine [[routine]]"
+      },
+      "args": [
+        {
+          "type": "autocomplete",
+          "name": "routine",
+          "placeholder": {
+            "en": "Text here the name of the routine",
+            "it": "Digita il nome della routine"
+          }
+        }
+      ]
+    },
+    {
+      "id": "alexa-notification",
+      "title": {
+        "en": "Alexa notification",
+        "it": "Notifica Alexa"
+      },
+      "hint": {
+        "en": "Send a notification to your Echo device.",
+        "it": "Invia una notifica al tuo dispositivo Echo."
+      },
+      "titleFormatted": {
+        "en": "Send the reminder [[message]]",
+        "it": "Invia il promemoria [[message]]"
+      },
+      "args": [
+        {
+          "type": "text",
+          "name": "message",
+          "placeholder": {
+            "en": "Reminder text here",
+            "it": "Testo del promemoria"
           }
         }
       ]

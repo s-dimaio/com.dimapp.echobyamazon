@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.dimapp.echobyamazon",
-  "version": "1.1.0",
+  "version": "2.0.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -28,8 +28,38 @@
     "email": "simone.dimaio77@gmail.com"
   },
   "brandColor": "#232f3e",
+  "api": {
+    "createDevicesFile": {
+      "method": "POST",
+      "path": "/createDevicesFile"
+    }
+  },
   "flow": {
     "actions": [
+      {
+        "title": {
+          "en": "Play to Echo group"
+        },
+        "hint": {
+          "en": "Play to Echo group",
+          "it": "Riproduci in un gruppo"
+        },
+        "titleFormatted": {
+          "en": "Play to the group [[group]]",
+          "it": "Riproduci nel gruppo [[group]]"
+        },
+        "args": [
+          {
+            "type": "autocomplete",
+            "name": "group",
+            "placeholder": {
+              "en": "Text here the name of the group",
+              "it": "Digita il nome del gruppo"
+            }
+          }
+        ],
+        "id": "play-to-echo-group"
+      },
       {
         "id": "echo-speak",
         "title": {
@@ -140,8 +170,67 @@
             "type": "text",
             "name": "command",
             "placeholder": {
-              "en": "text here a Alexa command",
+              "en": "Text here an Alexa command",
               "it": "Digita qui un commando per Alexa"
+            }
+          }
+        ]
+      },
+      {
+        "id": "alexa-routines",
+        "title": {
+          "en": "Alexa routines"
+        },
+        "hint": {
+          "en": "Start an Alexa routine.",
+          "it": "Avvia una routine di Alexa."
+        },
+        "titleFormatted": {
+          "en": "Run the routine [[routine]]",
+          "it": "Esegui la routine [[routine]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "autocomplete",
+            "name": "routine",
+            "placeholder": {
+              "en": "Text here the name of the routine",
+              "it": "Digita il nome della routine"
+            }
+          }
+        ]
+      },
+      {
+        "id": "alexa-notification",
+        "title": {
+          "en": "Alexa notification",
+          "it": "Notifica Alexa"
+        },
+        "hint": {
+          "en": "Send a notification to your Echo device.",
+          "it": "Invia una notifica al tuo dispositivo Echo."
+        },
+        "titleFormatted": {
+          "en": "Send the reminder [[message]]",
+          "it": "Invia il promemoria [[message]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "text",
+            "name": "message",
+            "placeholder": {
+              "en": "Reminder text here",
+              "it": "Testo del promemoria"
             }
           }
         ]
@@ -155,6 +244,14 @@
       },
       "class": "speaker",
       "capabilities": [
+        "speaker_playing",
+        "speaker_next",
+        "speaker_prev",
+        "speaker_shuffle",
+        "speaker_repeat",
+        "speaker_artist",
+        "speaker_album",
+        "speaker_track",
         "volume_set"
       ],
       "platforms": [

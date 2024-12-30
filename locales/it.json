@@ -20,5 +20,22 @@
       "title": "La mia pagina delle impostazioni",
       "subtitle": "Per favore, accedi"
     }
+  },
+  "error": {
+    "playback": {
+      "timeout": "Errore di riproduzione (Timeout). Prova ad avviare la riproduzione dal tuo Echo.",
+      "generic": "Errore di riproduzione. Se l'errore persiste, prova a ricollegare il dispositivo."
+    },
+    "reminderEmpty": "Il testo del promemoria non può essere vuoto.",
+    "messageEmpty": "Il testo del messaggio non può essere vuoto.",
+    "announcementEmpty": "Il testo dell'annuncio non può essere vuoto.",
+    "commandEmpty": "Il testo del comando non può essere vuoto.",
+    "routineEmpty": "Il nome della routine non può essere vuoto.",
+    "volume": {
+      "timeout": "Errore di volume (Timeout). Prova a cambiare il volume dal tuo Echo.",
+      "generic": "Errore di volume. Se l'errore persiste prova a ricollegare il dispositivo."
+    },
+    "generic": "Errore: se l'errore persiste prova a ricollegare il dispositivo.",
+    "authenticationIssues": "Problemi di autenticazione: per risolvere prova a riparare il tuo dispositivo."
   }
 }

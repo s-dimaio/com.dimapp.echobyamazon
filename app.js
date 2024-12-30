@@ -1,13 +1,15 @@
 'use strict';
 
 const Homey = require('homey');
-const EchoConnect = require('./lib/EchoConnect')
+const { EchoConnect } = require('./lib/EchoConnect')
+let playGroupActionCard;
 
 
 class MyApp extends Homey.App {
 
 
-  setAppListener() {
+
+  registerAlexaListener() {
     this.echoConnect.on('pushDisconnected', (willReconnect, reason) => {
       this.log('App - pushDisconnected listener - willReconnect:', willReconnect);
 
@@ -22,7 +24,7 @@ class MyApp extends Homey.App {
       }
     });
 
-    this.echoConnect.on('alexaConnected', (devArray) => {
+    this.echoConnect.on('alexaConnected', async (devArray) => {
       this.log('App - alexaConnected listener - Inizializzazione completata - dispositivi trovati:', devArray.length);
 
       const isPushConnected = this.echoConnect.isPushConnected();
@@ -30,8 +32,34 @@ class MyApp extends Homey.App {
 
       if (isPushConnected === false) {
         this.log('App - alexaConnected listener - initPushMessage called!')
-        this.echoConnect.initPushMessage()
+        this.echoConnect.initPushMessage();
       }
+
+      playGroupActionCard.registerArgumentAutocompleteListener(
+        "group",
+        async (query, args) => {
+          try {
+            const echoGroup = await this.echoConnect.getAudioGroupsList();
+            const results = echoGroup.map(item => ({
+              name: item.name,
+              id: item.id
+            }));
+
+            this.log('echoGroupFlow:', JSON.stringify(results, null, 2));
+
+            // filter based on the query
+            return results.filter((result) => {
+              return result.name.toLowerCase().includes(query.toLowerCase());
+            });
+
+          } catch (error) {
+            console.error("Error getting audio groups:", error);
+            return [];
+          }
+        }
+      );
+
+
 
       // Execute callback if it has been set
       if (this.alexaConnectedCallback) {
@@ -57,8 +85,8 @@ class MyApp extends Homey.App {
   async onInit() {
     this.log('App - onInit - MyApp has been initialized');
 
-    this.echoConnect = new EchoConnect();
-    this.setAppListener();
+    this.echoConnect = new EchoConnect(true);
+    this.registerAlexaListener();
 
 
     const cookieData = this.homey.settings.get('cookie');
@@ -68,6 +96,25 @@ class MyApp extends Homey.App {
       amazonPage = 'amazon.de';
       this.homey.settings.set('amazonPage', amazonPage);
     }
+
+    playGroupActionCard = this.homey.flow.getActionCard("play-to-echo-group");
+    playGroupActionCard.registerRunListener(async (args) => {
+      //throw new Error ('Test Error!! oops');
+
+      const id = args.group.id;
+      const name = args.group.name;
+
+      this.log(`App - setEchoFlowActionCard - echo-speak flow message: ${id}`);
+
+      try {
+        await this.homey.drivers.getDriver('echo').executeEchoAction(id, 'ciao', 'speak');
+        this.log('Routine command sent successfully');
+      } catch (error) {
+        this.error('Error calling routine:', error);
+      }
+    });
+
+
 
     this.log('App - onInit - isCookieEmptyOrNull:', this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData));
 
@@ -84,6 +131,9 @@ class MyApp extends Homey.App {
             this.log('App - onInit - initPushMessage called!')
             this.echoConnect.initPushMessage()
           }
+
+          //const echoGroup = this.echoConnect.getAudioGroupsList();
+          //this.log('echoGroup:', JSON.stringify(echoGroup, null, 2));
 
         } else {
           this.log('App - onInit - You need to re-authenticate.');

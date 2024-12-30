@@ -18,7 +18,33 @@
     }
   },
   "settings": {
-    "title": "My Settings Page",
-    "subtitle": "Please log in"
+    "title": "App Settings",
+    "subtitle": "Please log in",
+    "domain": {
+      "title": "Server Status",
+      "server": "Server Alexa: ",
+      "ws": "Web Socket: "
+    },
+    "devices": {
+      "title": "Alexa Devices",
+      "button": "Server Alexa: "
+    }
+  },
+  "error": {
+    "playback": {
+      "timeout": "Playback error (Timeout). Try restarting playback from your Echo.",
+      "generic": "Playback error. If the error persists try reconnecting the device."
+    },
+    "reminderEmpty": "Reminder text cannot be empty.",
+    "messageEmpty": "Message text cannot be empty.",
+    "announcementEmpty": "Announcement text cannot be empty.",
+    "commandEmpty": "Command text cannot be empty.",
+    "routineEmpty": "Routine name cannot be empty.",
+    "volume": {
+      "timeout": "Volume error (Timeout). Try changing volume from your Echo.",
+      "generic": "Volume error. If the error persists try reconnecting the device."
+    },
+    "generic": "Error: if the error persists try reconnecting the device.",
+    "authenticationIssues": "Authentication issues: to fix try repairing your device."
   }
 }
