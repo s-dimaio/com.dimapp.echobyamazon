@@ -4,82 +4,145 @@
 <head>
   <!-- The '/homey.js' script must be included in your settings view to work -->
   <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-left: 10px;
+      margin-right: 10px;
+      margin-top: auto;
+    }
+
+    .homey-button-primary-full {
+      margin-top: auto;
+      align-self: center;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .flex-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .homey-form-fieldset>div:first-of-type {
+      margin-top: 10px;
+      /* Adjust the value as needed */
+    }
+
+    .homey-form-legend-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
 </head>
 
 <body>
-  <header class="homey-header">
-    <h1 class="homey-title" data-i18n="settings.title">
-      <!-- This will be filled with the translated string with key 'settings.title'. -->
-    </h1>
-    <p class="homey-subtitle" data-i18n="settings.subtitle">
-      <!-- This field will also be translated -->
-    </p>
-  </header>
+  <div class="content">
+    <div class="homey-form-group">
+      <fieldset class="homey-form-fieldset">
+        <div class="homey-form-legend-container">
+          <legend class="homey-form-legend" data-i18n="settings.connection.title"></legend>
+          <a href="#" id="refresh" data-i18n="settings.connection.refresh"></a>
+        </div>
 
-  <div class="homey-form-group">
-    <fieldset class="homey-form-fieldset">
-      <legend class="homey-form-legend" data-i18n="settings.domain.title"></legend>
+        <div>
+          <span id="server"></span>
+        </div>
+        <div>
+          <span id="ws"></span>
+        </div>
 
-      <span data-i18n="settings.domain.server"></span><br>
-      <span data-i18n="settings.domain.ws"></span>
-    </fieldset>
+      </fieldset>
+    </div>
+
+    <div class="homey-form-group">
+      <fieldset class="homey-form-fieldset">
+        <legend class="homey-form-legend" data-i18n="settings.devices.title"></legend>
+        <div>
+          <a href="#" id="save" data-i18n="settings.devices.link"></a>&nbsp;
+          <span id="devices" data-i18n="settings.devices.text"></span>
+        </div>
+      </fieldset>
+    </div>
   </div>
 
-  <div class="homey-form-group">
-    <fieldset class="homey-form-fieldset">
-      <legend class="homey-form-legend" data-i18n="settings.devices.title"></legend>
-
-      <button id="save" class="homey-button-primary-full" data-i18n="settings.devices.button"></button>
-    </fieldset>
+  <div class="footer">
+    <button id="disconnect" class="homey-button-primary-full" data-i18n="settings.disconnect.button"></button>
   </div>
-  
+
   <script type="text/javascript">
     // a method named 'onHomeyReady' must be present in your code
     function onHomeyReady(Homey) {
       // Tell Homey we're ready to be displayed
       Homey.ready();
 
-      var usernameElement = document.getElementById("username");
-      var passwordElement = document.getElementById("password");
+      var serverElement = document.getElementById("server");
+      var wsElement = document.getElementById("ws");
       var saveElement = document.getElementById("save");
+      var disconnectElement = document.getElementById("disconnect");
+      var refreshElement = document.getElementById("refresh");
 
-      Homey.get("username", function (err, username) {
+      Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
-        usernameElement.value = username;
+        serverElement.textContent = result;
       });
 
-      Homey.get("password", function (err, password) {
+      Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
-        passwordElement.value = password;
+        wsElement.textContent = result;
       });
 
-      saveElement.addEventListener("click", function (e) {
-        // Homey.set("username", usernameElement.value, function (err) {
-        //   if (err) return Homey.alert(err);
-        // });
-        // Homey.set("password", passwordElement.value, function (err) {
-        //   if (err) return Homey.alert(err);
-        // });
-
-        Homey.api('POST', '/createDevicesFile', undefined, (err, result) => {
+      refreshElement.addEventListener("click", function (e) {
+        Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
           if (err) return Homey.alert(err);
-          //Homey.alert('File creato con successo. Percorso: ' + result);
-          Homey.openURL(result);
+          serverElement.textContent = result;
         });
 
+        Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
+          if (err) return Homey.alert(err);
+          wsElement.textContent = result;
+        });
+      });
 
-        // Homey.api("PUT", "/updateSomething/123", { foo: "bar" }, function (err, result) {
-        //   if (err) return Homey.alert(err);
 
-        //   if (result && result.success) {
-        //     Homey.alert(result.message);
-        //     Homey.openURL(result.message);
-        //   } else {
-        //     Homey.alert(result.message || "Errore sconosciuto", result.error);
-        //   }
+      saveElement.addEventListener("click", function (e) {
+        Homey.api('POST', '/createDevicesFile', undefined, (err, result) => {
+          if (err) return Homey.alert(err);
+          Homey.openURL(result);
+        });
+      });
 
-        //   //Homey.openURL('http://192.168.178.27/app/com.dimapp.echobyamazon/userdata/alexa-devices.json')
-        // });
+      disconnect.addEventListener("click", function (e) {
+        Homey.api('POST', '/disconnectAlexa', undefined, (err, result) => {
+          if (err) return Homey.alert(err);
+
+          Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
+            if (err) return Homey.alert(err);
+            serverElement.textContent = result;
+          });
+
+          Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
+            if (err) return Homey.alert(err);
+            wsElement.textContent = result;
+          });
+        });
       });
     }
   </script>

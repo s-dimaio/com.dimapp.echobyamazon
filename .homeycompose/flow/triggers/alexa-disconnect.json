@@ -1,0 +1,10 @@
+{
+  "title": {
+    "en": "Alexa disconnected",
+    "it": "Disconnessione di Alexa"
+  },
+  "hint": {
+    "en": "Detect when Alexa disconnet from server",
+    "it": "Rileva quando Alexa si disconnette dal server"
+  }
+}

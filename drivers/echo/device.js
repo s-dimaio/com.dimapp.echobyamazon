@@ -79,11 +79,14 @@ class MyDevice extends Homey.Device {
   }
 
   _registerHomeyListener() {
+    const cookieData = this.homey.settings.get('cookie');
+    const amazonPage = this.homey.settings.get('amazonPage');
+
     this.registerCapabilityListener("volume_set", async (value) => {
       this.log('Device - registerHomeyListener - volume_set:', value * 100);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
           this.wsVolumeChanged = false;
           await this.homey.app.echoConnect.setVolumeDevice(this.getData().id, (value * 100));
@@ -120,7 +123,7 @@ class MyDevice extends Homey.Device {
       this.log('Device - registerHomeyListener - speaker_playing:', value);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
           // Try to change the playback to play or pause
           await this.homey.app.echoConnect.changePlayback(this.getData().id, value ? 'play' : 'pause');
@@ -154,6 +157,9 @@ class MyDevice extends Homey.Device {
             this.error(`Authentication: ${error?.message}`);
             await this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
             break;
+          case 'ERROR_NOT_SUPPORTED':
+            this.error(`Error during speaker_playing: ${error?.message}`);
+            throw new Error(this.homey.__("error.playback.notSupported"));
           case 'ERROR_PLAYBACK':
             this.error(`Error during speaker_playing: ${error?.message}`);
             throw new Error(this.homey.__("error.playback.generic"));
@@ -167,7 +173,7 @@ class MyDevice extends Homey.Device {
       this.log('Device - registerHomeyListener - speaker_prev');
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
           // Try to change the playback to previous track
           await this.homey.app.echoConnect.changePlayback(this.getData().id, 'previous');
@@ -190,6 +196,9 @@ class MyDevice extends Homey.Device {
             this.error(`Authentication: ${error?.message}`);
             await this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
             break;
+          case 'ERROR_NOT_SUPPORTED':
+            this.error(`Error during speaker_playing: ${error?.message}`);
+            throw new Error(this.homey.__("error.playback.notSupported"));
           case 'ERROR_PLAYBACK':
             this.error(`Error during speaker_prev: ${error?.message}`);
             throw new Error(this.homey.__("error.playback.generic"));
@@ -203,7 +212,7 @@ class MyDevice extends Homey.Device {
       this.log('Device - registerHomeyListener - speaker_next');
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
           // Try to change the playback to next track
           await this.homey.app.echoConnect.changePlayback(this.getData().id, 'next');
@@ -226,6 +235,9 @@ class MyDevice extends Homey.Device {
             this.error(`Authentication: ${error?.message}`);
             await this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
             break;
+          case 'ERROR_NOT_SUPPORTED':
+            this.error(`Error during speaker_playing: ${error?.message}`);
+            throw new Error(this.homey.__("error.playback.notSupported"));
           case 'ERROR_PLAYBACK':
             this.error(`Error during speaker_next: ${error?.message}`);
             throw new Error(this.homey.__("error.playback.generic"));
@@ -239,7 +251,7 @@ class MyDevice extends Homey.Device {
       this.log('Device - registerHomeyListener - speaker_shuffle:', value);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
           this.wsQueueChanged = false;
           await this.homey.app.echoConnect.changePlayback(this.getData().id, 'shuffle', value);
@@ -262,6 +274,9 @@ class MyDevice extends Homey.Device {
             this.error(`Authentication: ${error?.message}`);
             await this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
             break;
+          case 'ERROR_NOT_SUPPORTED':
+            this.error(`Error during speaker_playing: ${error?.message}`);
+            throw new Error(this.homey.__("error.playback.notSupported"));
           case 'ERROR_PLAYBACK':
             this.error(`Error during speaker_shuffle: ${error?.message}`);
             throw new Error(this.homey.__("error.playback.generic"));
@@ -275,7 +290,7 @@ class MyDevice extends Homey.Device {
       this.log('Device - registerHomeyListener - speaker_repeat:', value, value !== 'none');
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
           let repeat = value;
 
@@ -301,6 +316,7 @@ class MyDevice extends Homey.Device {
         switch (error?.code) {
           case 'ERROR_TIMEOUT':
             this.error(`Timeout error with speaker_repeat: ${error?.message}`);
+            this.setCapabilityValue('speaker_repeat', 'none').catch(this.error);
             throw new Error(this.homey.__("error.playback.timeout"));
 
           case 'ERROR_INIT':
@@ -309,11 +325,17 @@ class MyDevice extends Homey.Device {
             this.error(`Authentication: ${error?.message}`);
             await this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
             break;
+          case 'ERROR_NOT_SUPPORTED':
+            this.error(`Error during speaker_playing: ${error?.message}`);
+            this.setCapabilityValue('speaker_repeat', 'none').catch(this.error);
+            throw new Error(this.homey.__("error.playback.notSupported"));
           case 'ERROR_PLAYBACK':
             this.error(`Error during speaker_repeat: ${error?.message}`);
+            this.setCapabilityValue('speaker_repeat', 'none').catch(this.error);
             throw new Error(this.homey.__("error.playback.generic"));
           default:
             this.error('Error in speaker_repeat capability:', error);
+            this.setCapabilityValue('speaker_repeat', 'none').catch(this.error);
         }
       }
     });
@@ -365,13 +387,11 @@ class MyDevice extends Homey.Device {
    * onInit is called when the device is initialized.
    */
   async onInit() {
-    this.log('Device ' + this.getName() + ' (' + this.getData().id + ') has been initialized - isPushConnected: ' + this.homey.app.echoConnect.isPushConnected());
+    this.log('[onInit] ' + this.getName() + ' (' + this.getData().id + ') has been initialized - isPushConnected: ' + this.homey.app.echoConnect.isPushConnected());
 
-    const cookieData = this.homey.settings.get('cookie');
-    this.log('Device - onInit - isCookieEmptyOrNull:', this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData));
+    this.log('[onInit] disableAllDevices:', this.homey.app.disableAllDevices);
 
-
-    if (!this.homey.app.echoConnect.isCookieEmptyOrNull(cookieData)) {
+    if (!this.homey.app.disableAllDevices) {
       //Initialize the websocket control variables
       this.wsVolumeChanged = true;
       this.wsQueueChanged = true;
@@ -390,7 +410,7 @@ class MyDevice extends Homey.Device {
       this._initEchoDevices(this.getData().id);
 
     } else {
-      this.setUnavailable().catch(this.error);
+      this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
 
     }
   }

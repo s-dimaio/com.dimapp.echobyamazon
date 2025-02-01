@@ -3,13 +3,13 @@
     "en": "Play to Echo group"
   },
   "hint": {
-    "en": "Play to Echo group",
-    "it": "Riproduci in un gruppo"
+    "en": "Manage the playback of songs within a Echo group",
+    "it": "Gestisci la riproduzione di brani all'interno di un gruppo Echo"
   },
   "titleFormatted": {
-        "en": "Play to the group [[group]]",
-        "it": "Riproduci nel gruppo [[group]]"
-      },
+    "en": "[[command]] to the group [[group]]",
+    "it": "[[command]] nel gruppo [[group]]"
+  },
   "args": [
     {
       "type": "autocomplete",
@@ -18,6 +18,40 @@
         "en": "Text here the name of the group",
         "it": "Digita il nome del gruppo"
       }
+    },
+    {
+      "type": "dropdown",
+      "name": "command",
+      "title": {
+        "en": "Choose a command",
+        "it": "Scegli un comando"
+      },
+      "values": [
+        {
+          "id": "play",
+          "title": {
+            "en": "Play"
+          }
+        },
+        {
+          "id": "pause",
+          "title": {
+            "en": "Pause"
+          }
+        },
+        {
+          "id": "previous",
+          "title": {
+            "en": "Previous"
+          }
+        },
+        {
+          "id": "next",
+          "title": {
+            "en": "Next"
+          }
+        }
+      ]
     }
   ]
 }

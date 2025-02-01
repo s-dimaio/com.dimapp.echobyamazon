@@ -2,6 +2,7 @@
   "actions": [
     {
       "id": "echo-speak",
+      "highlight": true,
       "title": {
         "en": "Echo Speak"
       },
@@ -74,6 +75,7 @@
     },
     {
       "id": "alexa-command",
+      "highlight": true,
       "title": {
         "en": "Alexa Command"
       },
@@ -98,6 +100,7 @@
     },
     {
       "id": "alexa-routines",
+      "highlight": true,
       "title": {
         "en": "Alexa routines"
       },

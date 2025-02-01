@@ -12,6 +12,7 @@ This Homey Pro app allows you to control your Echo devices through your Homey sm
 
 - Adjust volume
 - Voice command support
+- Playback functionality
 
 ## Installation
 

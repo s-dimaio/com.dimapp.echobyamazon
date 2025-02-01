@@ -18,21 +18,31 @@
     }
   },
   "settings": {
-    "title": "App Settings",
-    "subtitle": "Please log in",
-    "domain": {
-      "title": "Server Status",
-      "server": "Server Alexa: ",
-      "ws": "Web Socket: "
+    "connection": {
+      "title": "Connection Status",
+      "server": {
+        "ok": "App is connected to Alexa server",
+        "error": "App is NOT connected to Alexa server"
+      },
+      "ws": {
+        "ok": "WebSocket is working correctly",
+        "error": "WebSocket is NOT working"
+      },
+      "refresh": "Refresh"
     },
     "devices": {
       "title": "Alexa Devices",
-      "button": "Server Alexa: "
+      "text": "to download a list of all your devices connected to Alexa",
+      "link": "Press here"
+    },
+    "disconnect": {
+      "button": "Disconnect"
     }
   },
   "error": {
     "playback": {
       "timeout": "Playback error (Timeout). Try restarting playback from your Echo.",
+      "notSupported": "Playback error. This feature does not seem to be supported by your Echo device.",
       "generic": "Playback error. If the error persists try reconnecting the device."
     },
     "reminderEmpty": "Reminder text cannot be empty.",
@@ -45,6 +55,8 @@
       "generic": "Volume error. If the error persists try reconnecting the device."
     },
     "generic": "Error: if the error persists try reconnecting the device.",
-    "authenticationIssues": "Authentication issues: to fix try repairing your device."
+    "authenticationIssues": "Authentication issues: to fix try repairing the device.",
+    "offline": "This device is offline. Please check your device and try again.",
+    "alexaDisconnected": "Echo devices disconnected from Alexa server. Try to manually reconnect."
   }
 }

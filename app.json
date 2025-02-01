@@ -32,21 +32,46 @@
     "createDevicesFile": {
       "method": "POST",
       "path": "/createDevicesFile"
+    },
+    "getServerStatus": {
+      "method": "GET",
+      "path": "/getServerStatus"
+    },
+    "getWebSocketStatus": {
+      "method": "GET",
+      "path": "/getWebSocketStatus"
+    },
+    "disconnectAlexa": {
+      "method": "POST",
+      "path": "/disconnectAlexa"
     }
   },
   "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "Alexa disconnected",
+          "it": "Disconnessione di Alexa"
+        },
+        "hint": {
+          "en": "Detect when Alexa disconnet from server",
+          "it": "Rileva quando Alexa si disconnette dal server"
+        },
+        "id": "alexa-disconnect"
+      }
+    ],
     "actions": [
       {
         "title": {
           "en": "Play to Echo group"
         },
         "hint": {
-          "en": "Play to Echo group",
-          "it": "Riproduci in un gruppo"
+          "en": "Manage the playback of songs within a Echo group",
+          "it": "Gestisci la riproduzione di brani all'interno di un gruppo Echo"
         },
         "titleFormatted": {
-          "en": "Play to the group [[group]]",
-          "it": "Riproduci nel gruppo [[group]]"
+          "en": "[[command]] to the group [[group]]",
+          "it": "[[command]] nel gruppo [[group]]"
         },
         "args": [
           {
@@ -56,12 +81,47 @@
               "en": "Text here the name of the group",
               "it": "Digita il nome del gruppo"
             }
+          },
+          {
+            "type": "dropdown",
+            "name": "command",
+            "title": {
+              "en": "Choose a command",
+              "it": "Scegli un comando"
+            },
+            "values": [
+              {
+                "id": "play",
+                "title": {
+                  "en": "Play"
+                }
+              },
+              {
+                "id": "pause",
+                "title": {
+                  "en": "Pause"
+                }
+              },
+              {
+                "id": "previous",
+                "title": {
+                  "en": "Previous"
+                }
+              },
+              {
+                "id": "next",
+                "title": {
+                  "en": "Next"
+                }
+              }
+            ]
           }
         ],
         "id": "play-to-echo-group"
       },
       {
         "id": "echo-speak",
+        "highlight": true,
         "title": {
           "en": "Echo Speak"
         },
@@ -149,6 +209,7 @@
       },
       {
         "id": "alexa-command",
+        "highlight": true,
         "title": {
           "en": "Alexa Command"
         },
@@ -178,6 +239,7 @@
       },
       {
         "id": "alexa-routines",
+        "highlight": true,
         "title": {
           "en": "Alexa routines"
         },

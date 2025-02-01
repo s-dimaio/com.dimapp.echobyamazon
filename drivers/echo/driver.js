@@ -5,23 +5,23 @@ const Homey = require('homey');
 class MyDriver extends Homey.Driver {
 
   // Create a Json with the format accepted by Homey for devices
-  _formatDevicesForHomey(arrayDevices) {
-    if (!arrayDevices) {
-      console.error('arrayDevices non è definito');
+  _formatDevicesForHomey(echoDevices) {
+    if (!echoDevices) {
+      console.error('echoDevices non è definito');
       return [];
     }
 
-    return arrayDevices.map(device => ({
-      name: device.name,
+    return echoDevices.map(device => ({
+      name: device.accountName,
       data: {
-        id: device.serial
+        id: device.serialNumber
       },
       settings: {
-        deviceFamily: device.family,
-        deviceType: device.type,
-        serialNumber: device.serial
+        deviceFamily: device.deviceFamily,
+        deviceType: device.deviceType,
+        serialNumber: device.serialNumber
       },
-      icon: device.getIcon()
+      icon: `ic_${device.deviceFamily.toLowerCase()}.svg`
     }));
   }
 
@@ -79,6 +79,9 @@ class MyDriver extends Homey.Driver {
   }
 
   _setEchoFlowActionCard() {
+    const cookieData = this.homey.settings.get('cookie');
+    const amazonPage = this.homey.settings.get('amazonPage');
+
     // Set 'echo-speak' flow card
     const speakActionCard = this.homey.flow.getActionCard('echo-speak');
     speakActionCard.registerRunListener(async (args) => {
@@ -90,10 +93,15 @@ class MyDriver extends Homey.Driver {
         throw new Error(this.homey.__("error.messageEmpty"));
       }
 
+      if (!this.homey.app.echoConnect.isOnLine(serial)) {
+        this.error(`Driver - speakActionCard - ${serial} is offline`);
+        throw new Error(this.homey.__("error.offline"));
+      }
+
       this.log(`Driver - setEchoFlowActionCard - echo-speak flow message: ${message}`);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
           await this.executeEchoAction(serial, message, 'speak');
@@ -131,10 +139,15 @@ class MyDriver extends Homey.Driver {
         throw new Error(this.homey.__("error.announcementEmpty"));
       }
 
+      if (!this.homey.app.echoConnect.isOnLine(serial)) {
+        this.error(`Driver - announcementActionCard - ${serial} is offline`);
+        throw new Error(this.homey.__("error.offline"));
+      }
+
       this.log(`Driver - setEchoFlowActionCard - echo-announcement flow message: ${announcement}`);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
           await this.executeEchoAction(serial, announcement, 'announce');
@@ -172,10 +185,15 @@ class MyDriver extends Homey.Driver {
         throw new Error(this.homey.__("error.messageEmpty"));
       }
 
+      if (!this.homey.app.echoConnect.isOnLine(serial)) {
+        this.error(`Driver - whisperActionCard - ${serial} is offline`);
+        throw new Error(this.homey.__("error.offline"));
+      }
+
       this.log(`Driver - setEchoFlowActionCard - echo-whisper flow message: ${message}`);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
           await this.executeEchoAction(serial, message, 'whisper');
@@ -213,10 +231,15 @@ class MyDriver extends Homey.Driver {
         throw new Error(this.homey.__("error.commandEmpty"));
       }
 
+      if (!this.homey.app.echoConnect.isOnLine(serial)) {
+        this.error(`Driver - alexaCommandActionCard - ${serial} is offline`);
+        throw new Error(this.homey.__("error.offline"));
+      }
+
       this.log(`Driver - setEchoFlowActionCard - alexa-command flow message: ${command}`);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
           await this.executeEchoAction(serial, command, 'command');
@@ -281,10 +304,15 @@ class MyDriver extends Homey.Driver {
         throw new Error(this.homey.__("error.routineEmpty"));
       }
 
+      if (!this.homey.app.echoConnect.isOnLine(serial)) {
+        this.error(`Driver - alexaRoutinesActionCard - ${serial} is offline`);
+        throw new Error(this.homey.__("error.offline"));
+      }
+
       this.log(`Driver - setEchoFlowActionCard - alexa-routines flow message: ${routineId}`);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
           await this.executeEchoAction(serial, routineId, 'routine');
@@ -322,10 +350,15 @@ class MyDriver extends Homey.Driver {
         throw new Error(this.homey.__("error.reminderEmpty"));
       }
 
+      if (!this.homey.app.echoConnect.isOnLine(serial)) {
+        this.error(`Driver - alexaNotificationActionCard - ${serial} is offline`);
+        throw new Error(this.homey.__("error.offline"));
+      }
+
       this.log(`Driver - setEchoFlowActionCard - alexa-notification flow message: ${message}`);
 
       try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush();
+        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
           await this.executeEchoAction(serial, message, 'notification');
@@ -461,10 +494,6 @@ class MyDriver extends Homey.Driver {
       }
     });
 
-    session.setHandler("my_event", (data) => {
-      // Your code
-    });
-
     session.setHandler("disconnect", () => {
       this.log('onRepair - disconnect called')
 
@@ -504,11 +533,14 @@ class MyDriver extends Homey.Driver {
     session.setHandler("list_devices", async () => {
       this.log('onPair - ListDevices called');
 
-      try {
-        const devices = this._formatDevicesForHomey(this.homey.app.echoConnect.arrayDevices);
-        this.log('Devices formatati:', devices);
+      //this.log(JSON.stringify(this.homey.app.echoConnect.echoDevices, null, 2));
 
-        return devices;
+      try {
+        const echoDevices = await this.homey.app.echoConnect.getEchoDevices();
+        const devicesForHomey = this._formatDevicesForHomey(echoDevices);
+        this.log('Devices formatati:', devicesForHomey);
+
+        return devicesForHomey;
       } catch (error) {
         this.error('Errore durante il recupero dei dispositivi:', error);
 

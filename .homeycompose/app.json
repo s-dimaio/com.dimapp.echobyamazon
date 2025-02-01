@@ -1,6 +1,6 @@
 {
   "id": "com.dimapp.echobyamazon",
-  "version": "2.0.1",
+  "version": "2.1.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -31,6 +31,18 @@
     "createDevicesFile": {
       "method": "POST",
       "path": "/createDevicesFile"
+    },
+    "getServerStatus": {
+      "method": "GET",
+      "path": "/getServerStatus"
+    },
+    "getWebSocketStatus": {
+      "method": "GET",
+      "path": "/getWebSocketStatus"
+    },
+    "disconnectAlexa": {
+      "method": "POST",
+      "path": "/disconnectAlexa"
     }
   }
 }

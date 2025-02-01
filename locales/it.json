@@ -15,15 +15,34 @@
     "domain": {
       "text": "Dominio Amazon:",
       "link": "Modifica"
+    }
+  },
+  "settings": {
+    "connection": {
+      "title": "Connection Status",
+      "server": {
+        "ok": "L'app è connessa al server Alexa",
+        "error": "L'app NON è connessa al server Alexa"
+      },
+      "ws": {
+        "ok": "WebSocket sta funzionando correttamente",
+        "error": "WebSocket NON funziona"
+      },
+      "refresh": "Aggiorna"
     },
-    "settings": {
-      "title": "La mia pagina delle impostazioni",
-      "subtitle": "Per favore, accedi"
+    "devices": {
+      "title": "Dispositivi Alexa",
+      "text": "per scaricare un elenco di tutti i tuoi dispositivi connessi ad Alexa",
+      "link": "Premi qui"
+    },
+    "disconnect": {
+      "button": "Disconnetti"
     }
   },
   "error": {
     "playback": {
       "timeout": "Errore di riproduzione (Timeout). Prova ad avviare la riproduzione dal tuo Echo.",
+      "notSupported": "Errore di riproduzione. Questa funzione non sembra essere supportata dal tuo dispositivo Echo.",
       "generic": "Errore di riproduzione. Se l'errore persiste, prova a ricollegare il dispositivo."
     },
     "reminderEmpty": "Il testo del promemoria non può essere vuoto.",
@@ -36,6 +55,8 @@
       "generic": "Errore di volume. Se l'errore persiste prova a ricollegare il dispositivo."
     },
     "generic": "Errore: se l'errore persiste prova a ricollegare il dispositivo.",
-    "authenticationIssues": "Problemi di autenticazione: per risolvere prova a riparare il tuo dispositivo."
+    "authenticationIssues": "Problemi di autenticazione: per risolvere prova a riparare il dispositivo.",
+    "offline": "Questo dispositivo è offline. Controlla il  dispositivo e riprova",
+    "alexaDisconnected": "Dispositivi Echo disconnessi dal server Alexa. Prova a ricollegarli manualmente."
   }
 }
