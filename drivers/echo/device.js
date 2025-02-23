@@ -43,24 +43,51 @@ class MyDevice extends Homey.Device {
     this.homey.app.echoConnect.on('playerChanged', async (playerDetail) => {
       this.log('Device - playerChanged:', playerDetail.serial);
 
-      if (this.getData().id === playerDetail.serial) {
-        this.log('Device - playerChanged - mediaId:', this.getStoreValue('mediaId'));
+      if (playerDetail.isPlayingInGroup) {
+        this.log('Device - playerChanged - playing in group');
 
-        if (playerDetail.mediaId !== this.getStoreValue('mediaId')) {
-          this.setStoreValue('mediaId', playerDetail.mediaId);
+        const groupMembers = Object.keys(playerDetail.groupMember);
+        groupMembers.forEach(async member => {
+          if (this.getData().id === member) {  
+            if (playerDetail.mediaId !== this.getStoreValue('mediaId')) {
+              this.setStoreValue('mediaId', playerDetail.mediaId);
+  
+              this.log('Device - playerChanged - loading art album ' + playerDetail.track.artwork + ' in ' + this.getData().id);
+              this.albumArt.setUrl(playerDetail.track.artwork);
+              //await this.setAlbumArtImage(this.albumArt);
+              await this.albumArt.update();
+  
+              this.setCapabilityValue('speaker_artist', playerDetail.track.artist).catch(this.error);
+              this.setCapabilityValue('speaker_album', playerDetail.track.album).catch(this.error);
+              this.setCapabilityValue('speaker_track', playerDetail.track.title).catch(this.error);
+            }
+  
+            this.log(`Device - playerChanged - id: ${playerDetail.serial} - playing: ${playerDetail.state}`);
+            this.setStoreValue('groupId', playerDetail.serial);
+            this.setCapabilityValue('speaker_playing', playerDetail.state).catch(this.error);
+          }
+        });
+      } else {
+        if (this.getData().id === playerDetail.serial) {
+          this.log('Device - playerChanged - playing in single device');
 
-          this.log('Device - playerChanged - loading art album ' + playerDetail.track.artwork + ' in ' + this.getData().id);
-          this.albumArt.setUrl(playerDetail.track.artwork);
-          //await this.setAlbumArtImage(this.albumArt);
-          await this.albumArt.update();
+          if (playerDetail.mediaId !== this.getStoreValue('mediaId')) {
+            this.setStoreValue('mediaId', playerDetail.mediaId);
 
-          this.setCapabilityValue('speaker_artist', playerDetail.track.artist).catch(this.error);
-          this.setCapabilityValue('speaker_album', playerDetail.track.album).catch(this.error);
-          this.setCapabilityValue('speaker_track', playerDetail.track.title).catch(this.error);
+            this.log('Device - playerChanged - loading art album ' + playerDetail.track.artwork + ' in ' + this.getData().id);
+            this.albumArt.setUrl(playerDetail.track.artwork);
+            //await this.setAlbumArtImage(this.albumArt);
+            await this.albumArt.update();
+
+            this.setCapabilityValue('speaker_artist', playerDetail.track.artist).catch(this.error);
+            this.setCapabilityValue('speaker_album', playerDetail.track.album).catch(this.error);
+            this.setCapabilityValue('speaker_track', playerDetail.track.title).catch(this.error);
+          }
+
+          this.log(`Device - playerChanged - id: ${playerDetail.serial} - playing: ${playerDetail.state}`);
+          this.setStoreValue('groupId', null);
+          this.setCapabilityValue('speaker_playing', playerDetail.state).catch(this.error);
         }
-
-        this.log(`Device - playerChanged - id: ${playerDetail.serial} - playing: ${playerDetail.state}`);
-        this.setCapabilityValue('speaker_playing', playerDetail.state).catch(this.error);
       }
     });
 
@@ -125,8 +152,11 @@ class MyDevice extends Homey.Device {
       try {
         const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
+          // Set device id or group id
+          const id = this.getStoreValue('groupId') || this.getData().id;
+
           // Try to change the playback to play or pause
-          await this.homey.app.echoConnect.changePlayback(this.getData().id, value ? 'play' : 'pause');
+          await this.homey.app.echoConnect.changePlayback(id, value ? 'play' : 'pause');
 
           // Wait 5 sec for the playerChanged event
           await this._waitForEvent('playerChanged', 5000);
@@ -175,8 +205,11 @@ class MyDevice extends Homey.Device {
       try {
         const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
+          // Set device id or group id
+          const id = this.getStoreValue('groupId') || this.getData().id;
+
           // Try to change the playback to previous track
-          await this.homey.app.echoConnect.changePlayback(this.getData().id, 'previous');
+          await this.homey.app.echoConnect.changePlayback(id, 'previous');
 
           // Wait 5 sec for the playerChanged event
           await this._waitForEvent('playerChanged', 5000);
@@ -214,8 +247,11 @@ class MyDevice extends Homey.Device {
       try {
         const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
+          // Set device id or group id
+          const id = this.getStoreValue('groupId') || this.getData().id;
+
           // Try to change the playback to next track
-          await this.homey.app.echoConnect.changePlayback(this.getData().id, 'next');
+          await this.homey.app.echoConnect.changePlayback(id, 'next');
 
           // Wait 5 sec for the playerChanged event
           await this._waitForEvent('playerChanged', 5000);

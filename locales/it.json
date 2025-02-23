@@ -32,8 +32,8 @@
     },
     "devices": {
       "title": "Dispositivi Alexa",
-      "text": "per scaricare un elenco di tutti i tuoi dispositivi connessi ad Alexa",
-      "link": "Premi qui"
+      "text": "Ottieni un elenco di tutti i tuoi dispositivi connessi ad Alexa da utilizzare in caso di malfunzionamento dell'app",
+      "link": "Scarica"
     },
     "disconnect": {
       "button": "Disconnetti"

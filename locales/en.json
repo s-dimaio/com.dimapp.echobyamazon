@@ -32,8 +32,8 @@
     },
     "devices": {
       "title": "Alexa Devices",
-      "text": "to download a list of all your devices connected to Alexa",
-      "link": "Press here"
+      "text": "Get a list of all your devices connected to Alexa to use in case of app malfunction",
+      "link": "Download"
     },
     "disconnect": {
       "button": "Disconnect"

@@ -63,10 +63,10 @@
         </div>
 
         <div>
-          <span id="server"></span>
+          - <span id="server"></span>
         </div>
         <div>
-          <span id="ws"></span>
+          - <span id="ws"></span>
         </div>
 
       </fieldset>
@@ -74,9 +74,11 @@
 
     <div class="homey-form-group">
       <fieldset class="homey-form-fieldset">
-        <legend class="homey-form-legend" data-i18n="settings.devices.title"></legend>
+        <div class="homey-form-legend-container">
+          <legend class="homey-form-legend" data-i18n="settings.devices.title"></legend>
+          <a href="#" id="save" data-i18n="settings.devices.link"></a>
+        </div>
         <div>
-          <a href="#" id="save" data-i18n="settings.devices.link"></a>&nbsp;
           <span id="devices" data-i18n="settings.devices.text"></span>
         </div>
       </fieldset>
@@ -101,23 +103,23 @@
 
       Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
-        serverElement.textContent = result;
+        serverElement.textContent = result.msg;
       });
 
       Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
-        wsElement.textContent = result;
+        wsElement.textContent = result.msg;
       });
 
       refreshElement.addEventListener("click", function (e) {
         Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
           if (err) return Homey.alert(err);
-          serverElement.textContent = result;
+          serverElement.textContent = result.msg;
         });
 
         Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
           if (err) return Homey.alert(err);
-          wsElement.textContent = result;
+          wsElement.textContent = result.msg;
         });
       });
 
@@ -135,12 +137,12 @@
 
           Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
             if (err) return Homey.alert(err);
-            serverElement.textContent = result;
+            serverElement.textContent = result.msg;
           });
 
           Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
             if (err) return Homey.alert(err);
-            wsElement.textContent = result;
+            wsElement.textContent = result.msg;
           });
         });
       });

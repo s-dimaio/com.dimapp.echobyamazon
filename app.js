@@ -143,7 +143,7 @@ class MyApp extends Homey.App {
   async onInit() {
     this.log('[onInit] MyApp has been initialized');
 
-    this.echoConnect = new EchoConnect(true);
+    this.echoConnect = new EchoConnect(false);
 
     this._registerAlexaListener();
 
