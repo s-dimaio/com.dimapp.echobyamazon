@@ -10,9 +10,34 @@ This Homey Pro app allows you to control your Echo devices through your Homey sm
 
 ## Supported Commands
 
-- Adjust volume
-- Voice command support
-- Playback functionality
+### Voice Commands
+- **Echo Speak**: Make your Echo device say custom text
+- **Echo Announcement**: Send announcements to your Echo devices
+- **Echo Whisper**: Make your Echo device whisper messages
+- **Alexa Command**: Execute custom Alexa voice commands
+- **Serial Number Commands**: Send commands directly to specific Echo devices by serial number
+
+### Media Control
+- **Play/Pause**: Control music playback
+- **Next/Previous Track**: Skip to next or previous song
+- **Volume Control**: Adjust volume levels (0-100%)
+- **Shuffle**: Toggle shuffle mode on/off
+- **Repeat**: Control repeat modes (track/none - playlist mode not supported)
+
+### Device Management
+- **Echo Display Control**: Turn Echo device displays on/off (for devices with screens)
+- **Group Audio**: Manage multi-room audio groups
+- **Device Status**: Monitor online/offline status
+
+### Automation & Routines
+- **Alexa Routines**: Execute existing Alexa routines
+- **Notifications/Reminders**: Send timed notifications to Echo devices
+
+### Monitoring Capabilities
+- **Volume Sensor**: Monitor current volume levels
+- **Audio Groups Status**: Track if device is part of an audio group
+- **Playback Status**: Monitor what's currently playing (artist, album, track)
+- **Connection Status**: Monitor Alexa server and WebSocket connections
 
 ## Installation
 
