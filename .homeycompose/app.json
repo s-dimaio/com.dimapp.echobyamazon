@@ -1,6 +1,6 @@
 {
   "id": "com.dimapp.echobyamazon",
-  "version": "2.2.0",
+  "version": "2.5.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -43,6 +43,14 @@
     "disconnectAlexa": {
       "method": "POST",
       "path": "/disconnectAlexa"
+    },
+    "getSystemStatus": {
+      "method": "GET",
+      "path": "/getSystemStatus"
+    },
+    "healthCheck": {
+      "method": "GET",
+      "path": "/healthCheck"
     }
   }
 }

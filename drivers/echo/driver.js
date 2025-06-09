@@ -2,27 +2,65 @@
 
 const Homey = require('homey');
 
-class MyDriver extends Homey.Driver {
+class EchoDriver extends Homey.Driver {
 
-  // Create a Json with the format accepted by Homey for devices
+  // Supported action types constant
+  static get SUPPORTED_ACTIONS() {
+    return ['speak', 'announce', 'whisper', 'command', 'routine', 'notification'];
+  }
+
+  // Error codes constant
+  static get ERROR_CODES() {
+    return {
+      SPEAK: 'ERROR_SPEAK',
+      COMMAND: 'ERROR_COMMAND', 
+      ROUTINE: 'ERROR_ROUTINE',
+      NOTIFICATION: 'ERROR_NOTIFICATION',
+      DISPLAY_SETTING: 'ERROR_DISPLAY_SETTING',
+      AUTHENTICATION: 'ERROR_AUTHENTICATION',
+      INIT: 'ERROR_INIT',
+      PUSH: 'ERROR_PUSH',
+      INVALID_SERIAL: 'INVALID_SERIAL',
+      INVALID_ENABLED_SETTING: 'INVALID_ENABLED_SETTING'
+    };
+  }
+
+  /**
+   * Create a JSON object with the format accepted by Homey for devices
+   * @param {Array} echoDevices - Array of Echo devices from Amazon API
+   * @returns {Array} Array of formatted device objects for Homey
+   */
   _formatDevicesForHomey(echoDevices) {
     if (!echoDevices) {
-      console.error('echoDevices non è definito');
+      this.error('echoDevices is not defined');
       return [];
     }
 
-    return echoDevices.map(device => ({
-      name: device.accountName,
-      data: {
-        id: device.serialNumber
-      },
-      settings: {
-        deviceFamily: device.deviceFamily,
-        deviceType: device.deviceType,
-        serialNumber: device.serialNumber
-      },
-      icon: `ic_${device.deviceFamily.toLowerCase()}.svg`
-    }));
+    if (!Array.isArray(echoDevices)) {
+      this.error('echoDevices is not an array');
+      return [];
+    }
+
+    return echoDevices.map(device => {
+      // Validate required device properties
+      if (!device.serialNumber) {
+        this.error(`Device missing serialNumber: ${JSON.stringify(device)}`);
+        return null;
+      }
+      
+      return {
+        name: device.accountName || 'Unknown Device',
+        data: {
+          id: device.serialNumber
+        },
+        settings: {
+          deviceFamily: device.deviceFamily || 'unknown',
+          deviceType: device.deviceType || 'unknown',
+          serialNumber: device.serialNumber
+        },
+        icon: `ic_${(device.deviceFamily || 'default').toLowerCase()}.svg`
+      };
+    }).filter(Boolean); // Remove null entries from failed mappings
   }
 
   /**
@@ -46,6 +84,20 @@ class MyDriver extends Homey.Driver {
    * await executeEchoAction('device123', 'MorningRoutine', 'routine');
    */
   async executeEchoAction(id, content, action) {
+    // Validate input parameters
+    if (!id) {
+      const error = new Error('Device ID is required');
+      error.code = EchoDriver.ERROR_CODES.INVALID_SERIAL;
+      throw error;
+    }
+
+    if (!EchoDriver.SUPPORTED_ACTIONS.includes(action)) {
+      this.error(`Action not supported: ${action}`);
+      const error = new Error(`Unsupported action: ${action}`);
+      error.code = 'UNSUPPORTED_ACTION';
+      throw error;
+    }
+
     this.log(`Driver - executeEchoAction - id: ${id} - content: ${content} - action: ${action}`);
 
     try {
@@ -64,11 +116,21 @@ class MyDriver extends Homey.Driver {
           break;
         case 'notification':
           const localTime = new Date().toLocaleString(undefined, { timeZone: this.homey.clock.getTimezone() });
-          //result = await this.homey.app.echoConnect.createAlexaNotification(id, 'Reminder', content, new Date().getTime() + ((60 * 60 * 1000) + 5000), "ON");
-          result = await this.homey.app.echoConnect.createAlexaNotification(id, 'Reminder', content, new Date(localTime).getTime() + 5000, "ON");
+          // Create notification with 5 second delay from current local time
+          result = await this.homey.app.echoConnect.createAlexaNotification(
+            id, 
+            'Reminder', 
+            content, 
+            new Date(localTime).getTime() + 5000, 
+            "ON"
+          );
           break;
         default:
+          // This should never happen due to validation above, but keep for safety
           this.error(`Action not supported: ${action}`);
+          const error = new Error(`Unsupported action: ${action}`);
+          error.code = 'UNSUPPORTED_ACTION';
+          throw error;
       }
       return result;
 
@@ -78,313 +140,244 @@ class MyDriver extends Homey.Driver {
     }
   }
 
-  _setEchoFlowActionCard() {
+  /**
+   * Common handler for action card execution with validation and error handling
+   * @param {string} actionType - Type of action being executed
+   * @param {Object} args - Arguments from the flow card
+   * @param {Function} executeAction - Function to execute the specific action
+   * @private
+   */
+  async _handleActionCardExecution(actionType, args, executeAction) {
+    const serial = args.device.getData().id;
+    const content = args[actionType] || args.message || args.command;
     const cookieData = this.homey.settings.get('cookie');
     const amazonPage = this.homey.settings.get('amazonPage');
 
-    // Set 'echo-speak' flow card
-    const speakActionCard = this.homey.flow.getActionCard('echo-speak');
-    speakActionCard.registerRunListener(async (args) => {
-      const serial = args.device.getData().id;
-      const message = args.message;
+    // Common validation for content-based actions
+    if (content && content.trim().length === 0) {
+      this.error(`Driver - ${actionType}ActionCard - content is empty`);
+      throw new Error(this.homey.__(`error.${actionType}Empty`));
+    }
 
-      if (message.trim().length === 0) {
-        this.error('Driver - speakActionCard - message is empty');
-        throw new Error(this.homey.__("error.messageEmpty"));
+    // Check device online status
+    if (!this.homey.app.echoConnect.isOnLine(serial)) {
+      this.error(`Driver - ${actionType}ActionCard - ${serial} is offline`);
+      throw new Error(this.homey.__("error.offline"));
+    }
+
+    this.log(`Driver - ${actionType} flow content: ${content}`);
+
+    try {
+      const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
+
+      if (isConnected) {
+        await executeAction(serial, content);
+        this.log(`${actionType} executed successfully`);
+      } else {
+        await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
       }
+    } catch (error) {
+      await this._handleActionError(error, args.device, actionType);
+    }
+  }
 
-      if (!this.homey.app.echoConnect.isOnLine(serial)) {
-        this.error(`Driver - speakActionCard - ${serial} is offline`);
-        throw new Error(this.homey.__("error.offline"));
-      }
+  /**
+   * Common error handler for action card execution
+   * @param {Error} error - The error that occurred
+   * @param {Object} device - The device object
+   * @param {string} actionType - Type of action that failed
+   * @private
+   */
+  async _handleActionError(error, device, actionType) {
+    switch (error?.code) {
+      case `ERROR_${actionType.toUpperCase()}`:
+      case 'ERROR_SPEAK':
+      case 'ERROR_COMMAND':
+      case 'ERROR_ROUTINE':
+      case 'ERROR_NOTIFICATION':
+      case 'ERROR_DISPLAY_SETTING':
+        this.error(`Error with ${actionType}:`, error?.message);
+        throw new Error(this.homey.__("error.generic"));
 
-      this.log(`Driver - setEchoFlowActionCard - echo-speak flow message: ${message}`);
+      case 'INVALID_SERIAL':
+        this.error('Invalid device serial:', error?.message);
+        throw new Error(this.homey.__("error.invalidDevice"));
 
-      try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
+      case 'INVALID_ENABLED_SETTING':
+        this.error('Invalid power setting:', error?.message);
+        throw new Error(this.homey.__("error.invalidPowerSetting"));
 
-        if (isConnected) {
-          await this.executeEchoAction(serial, message, 'speak');
-          this.log('Message spoken successfully');
-        } else {
-          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-        }
-      } catch (error) {
-        switch (error?.code) {
-          case 'ERROR_SPEAK':
-            this.error('Error speaking message:', error?.message);
-            throw new Error(this.homey.__("error.generic"));
+      case 'ERROR_INIT':
+      case 'ERROR_PUSH':
+      case 'ERROR_AUTHENTICATION':
+        this.error(`Authentication - ${error?.message}`);
+        await device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+        break;
 
-          case 'ERROR_INIT':
-          case 'ERROR_PUSH':
-          case 'ERROR_AUTHENTICATION':
-            this.error(`Authentication - ${error?.message}`);
-            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-            break;
+      default:
+        this.error(`Generic Error with ${actionType}:`, error);
+        throw new Error(this.homey.__("error.generic"));
+    }
+  }
 
-          default:
-            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
-        }
-      }
-    });
-
-    // Set 'echo-announcement' flow card
-    const announcementActionCard = this.homey.flow.getActionCard('echo-announcement');
-    announcementActionCard.registerRunListener(async (args) => {
-      const serial = args.device.getData().id;
-      const announcement = args.announcement;
-
-      if (announcement.trim().length === 0) {
-        this.error('Driver - announcementActionCard - announcement is empty');
-        throw new Error(this.homey.__("error.announcementEmpty"));
-      }
-
-      if (!this.homey.app.echoConnect.isOnLine(serial)) {
-        this.error(`Driver - announcementActionCard - ${serial} is offline`);
-        throw new Error(this.homey.__("error.offline"));
-      }
-
-      this.log(`Driver - setEchoFlowActionCard - echo-announcement flow message: ${announcement}`);
-
-      try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
-
-        if (isConnected) {
-          await this.executeEchoAction(serial, announcement, 'announce');
-          this.log('Anouncement spoken successfully');
-        } else {
-          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-        }
-      } catch (error) {
-        switch (error?.code) {
-          case 'ERROR_SPEAK':
-            this.error('Error speaking announcement:', error?.message);
-            throw new Error(this.homey.__("error.generic"));
-
-          case 'ERROR_INIT':
-          case 'ERROR_PUSH':
-          case 'ERROR_AUTHENTICATION':
-            this.error(`Authentication - ${error?.message}`);
-            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-            break;
-
-          default:
-            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
-        }
-      }
-    });
-
-    // Set 'echo-whisper' flow card
-    const whisperActionCard = this.homey.flow.getActionCard('echo-whisper');
-    whisperActionCard.registerRunListener(async (args) => {
-      const serial = args.device.getData().id;
-      const message = args.message;
-
-      if (message.trim().length === 0) {
-        this.error('Driver - whisperActionCard - message is empty');
-        throw new Error(this.homey.__("error.messageEmpty"));
-      }
-
-      if (!this.homey.app.echoConnect.isOnLine(serial)) {
-        this.error(`Driver - whisperActionCard - ${serial} is offline`);
-        throw new Error(this.homey.__("error.offline"));
-      }
-
-      this.log(`Driver - setEchoFlowActionCard - echo-whisper flow message: ${message}`);
-
-      try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
-
-        if (isConnected) {
-          await this.executeEchoAction(serial, message, 'whisper');
-          this.log('Message whispered successfully');
-        } else {
-          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-        }
-      } catch (error) {
-        switch (error?.code) {
-          case 'ERROR_SPEAK':
-            this.error('Error whispering message:', error?.message);
-            throw new Error(this.homey.__("error.generic"));
-
-          case 'ERROR_INIT':
-          case 'ERROR_PUSH':
-          case 'ERROR_AUTHENTICATION':
-            this.error(`Authentication - ${error?.message}`);
-            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-            break;
-
-          default:
-            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
-        }
-      }
-    });
-
-    // Set 'alexa-command' flow card
-    const alexaCommandActionCard = this.homey.flow.getActionCard('alexa-command');
-    alexaCommandActionCard.registerRunListener(async (args) => {
-      const serial = args.device.getData().id;
-      const command = args.command;
-
-      if (command.trim().length === 0) {
-        this.error('Driver - alexaCommandActionCard - command is empty');
-        throw new Error(this.homey.__("error.commandEmpty"));
-      }
-
-      if (!this.homey.app.echoConnect.isOnLine(serial)) {
-        this.error(`Driver - alexaCommandActionCard - ${serial} is offline`);
-        throw new Error(this.homey.__("error.offline"));
-      }
-
-      this.log(`Driver - setEchoFlowActionCard - alexa-command flow message: ${command}`);
-
-      try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
-
-        if (isConnected) {
-          await this.executeEchoAction(serial, command, 'command');
-          this.log('Command sent successfully');
-        } else {
-          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-        }
-      } catch (error) {
-        switch (error?.code) {
-          case 'ERROR_COMMAND':
-            this.error('Error sending command:', error?.message);
-            throw new Error(this.homey.__("error.generic"));
-
-          case 'ERROR_INIT':
-          case 'ERROR_PUSH':
-          case 'ERROR_AUTHENTICATION':
-            this.error(`Authentication - ${error?.message}`);
-            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-            break;
-
-          default:
-            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
-        }
-      }
-    });
-
-    // Set 'alexa-routines' flow card
+  /**
+   * Setup routines action card with autocomplete functionality
+   * @private
+   */
+  _setupRoutinesActionCard() {
     const alexaRoutinesActionCard = this.homey.flow.getActionCard("alexa-routines");
+    
+    // Register autocomplete listener for routine selection
     alexaRoutinesActionCard.registerArgumentAutocompleteListener(
       "routine",
       async (query, args) => {
         try {
           const echoRoutines = await this.homey.app.echoConnect.getRoutinesList();
-          const results = echoRoutines.map(item => ({
-            name: item.name,
-            id: {
-              automationId: item.automationId,
-              sequence: item.sequence
-            }
-          }));
+          
+          // Validate that we received an array
+          if (!Array.isArray(echoRoutines)) {
+            this.error('getRoutinesList did not return an array');
+            return [];
+          }
 
-          this.log('echoRoutinesFlow:', JSON.stringify(results, null, 2));
+          // Map and filter routines
+          const results = echoRoutines
+            .filter(item => item?.name && item?.automationId) // Filter out invalid items
+            .map(item => ({
+              name: item.name,
+              id: {
+                automationId: item.automationId,
+                sequence: item.sequence
+              }
+            }))
+            .filter(result => 
+              result.name.toLowerCase().includes(query.toLowerCase())
+            );
 
-          // filter based on the query
-          return results.filter((result) => {
-            return result.name.toLowerCase().includes(query.toLowerCase());
-          });
+          this.log(`Filtered routines: ${results.length} of ${echoRoutines.length}`);
+          return results;
 
         } catch (error) {
-          console.error("Error getting routines:", error);
+          this.error("Error getting routines:", error);
           return [];
         }
       }
     );
-    alexaRoutinesActionCard.registerRunListener(async (args) => {
-      const serial = args.device.getData().id;
-      const routineId = args.routine.id;
-      const name = args.routine.name;
 
-      if (routineId.trim().length === 0) {
-        this.error('Driver - alexaRoutinesActionCard - routineId is empty');
+    // Register run listener for routine execution
+    alexaRoutinesActionCard.registerRunListener(async (args) => {
+      const routineId = args.routine?.id;
+      
+      if (!routineId || typeof routineId !== 'object') {
+        this.error('Driver - alexaRoutinesActionCard - invalid routineId');
         throw new Error(this.homey.__("error.routineEmpty"));
       }
 
-      if (!this.homey.app.echoConnect.isOnLine(serial)) {
-        this.error(`Driver - alexaRoutinesActionCard - ${serial} is offline`);
-        throw new Error(this.homey.__("error.offline"));
-      }
-
-      this.log(`Driver - setEchoFlowActionCard - alexa-routines flow message: ${routineId}`);
-
-      try {
-        const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
-
-        if (isConnected) {
-          await this.executeEchoAction(serial, routineId, 'routine');
-          this.log('Routine command sent successfully');
-        } else {
-          await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-        }
-      } catch (error) {
-        switch (error?.code) {
-          case 'ERROR_ROUTINE':
-            this.error('Error calling routine:', error?.message);
-            throw new Error(this.homey.__("error.generic"));
-
-          case 'ERROR_INIT':
-          case 'ERROR_PUSH':
-          case 'ERROR_AUTHENTICATION':
-            this.error(`Authentication - ${error?.message}`);
-            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-            break;
-
-          default:
-            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
-        }
-      }
+      await this._handleActionCardExecution(
+        'routine',
+        { ...args, routine: routineId },
+        (serial, content) => this.executeEchoAction(serial, content, 'routine')
+      );
     });
+  }
 
-    // Set 'alexa-notification' flow card
-    const alexaNotificationActionCard = this.homey.flow.getActionCard('alexa-notification');
-    alexaNotificationActionCard.registerRunListener(async (args) => {
+  /**
+   * Setup display power action card
+   * @private
+   */
+  _setupDisplayActionCard() {
+    const echoDisplayActionCard = this.homey.flow.getActionCard('echo-display');
+    
+    echoDisplayActionCard.registerRunListener(async (args) => {
       const serial = args.device.getData().id;
-      const message = args.message;
+      const power = args.power;
+      const cookieData = this.homey.settings.get('cookie');
+      const amazonPage = this.homey.settings.get('amazonPage');
 
-      if (message.trim().length === 0) {
-        this.error('Driver - alexaNotificationActionCard - message is empty');
-        throw new Error(this.homey.__("error.reminderEmpty"));
+      // Validate power setting
+      if (!power || (power !== 'on' && power !== 'off')) {
+        this.error('Driver - echoDisplayActionCard - invalid power setting');
+        throw new Error(this.homey.__("error.invalidPowerSetting"));
       }
 
+      // Check device online status
       if (!this.homey.app.echoConnect.isOnLine(serial)) {
-        this.error(`Driver - alexaNotificationActionCard - ${serial} is offline`);
+        this.error(`Driver - echoDisplayActionCard - ${serial} is offline`);
         throw new Error(this.homey.__("error.offline"));
       }
 
-      this.log(`Driver - setEchoFlowActionCard - alexa-notification flow message: ${message}`);
+      this.log(`Driver - echo-display flow power setting: ${power}`);
 
       try {
         const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
         if (isConnected) {
-          await this.executeEchoAction(serial, message, 'notification');
-          this.log('Notification sent successfully');
+          const enabled = power === 'on';
+          const result = await this.homey.app.echoConnect.setDisplayPowerSetting(serial, enabled);
+          this.log(`Display power set to ${power} successfully:`, result);
         } else {
           await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
         }
-
       } catch (error) {
-        switch (error?.code) {
-          case 'ERROR_NOTIFICATION':
-            this.error('Error sending notification:', error?.message);
-            throw new Error(this.homey.__("error.generic"));
-
-          case 'ERROR_INIT':
-          case 'ERROR_PUSH':
-          case 'ERROR_AUTHENTICATION':
-            this.error(`Authentication - ${error?.message}`);
-            await args.device.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
-            break;
-
-          default:
-            this.error('Generic Error with Speak-Announcement-Whisper flow:', error);
-        }
+        await this._handleActionError(error, args.device, 'display');
       }
     });
+  }
+
+  /**
+   * Initialize and register all Echo flow action cards
+   * @private
+   */
+  _setEchoFlowActionCard() {
+    // Configuration for standard action cards
+    const actionCards = [
+      {
+        id: 'echo-speak',
+        contentField: 'message',
+        action: 'speak',
+        errorKey: 'messageEmpty'
+      },
+      {
+        id: 'echo-announcement', 
+        contentField: 'announcement',
+        action: 'announce',
+        errorKey: 'announcementEmpty'
+      },
+      {
+        id: 'echo-whisper',
+        contentField: 'message', 
+        action: 'whisper',
+        errorKey: 'messageEmpty'
+      },
+      {
+        id: 'alexa-command',
+        contentField: 'command',
+        action: 'command',
+        errorKey: 'commandEmpty'
+      },
+      {
+        id: 'alexa-notification',
+        contentField: 'message',
+        action: 'notification',
+        errorKey: 'reminderEmpty'
+      }
+    ];
+
+    // Register standard action cards using common handler
+    actionCards.forEach(config => {
+      const actionCard = this.homey.flow.getActionCard(config.id);
+      actionCard.registerRunListener(async (args) => {
+        await this._handleActionCardExecution(
+          config.contentField,
+          args,
+          (serial, content) => this.executeEchoAction(serial, content, config.action)
+        );
+      });
+    });
+
+    // Setup special action cards
+    this._setupRoutinesActionCard();
+    this._setupDisplayActionCard();
   }
 
   /**
@@ -424,7 +417,7 @@ class MyDriver extends Homey.Driver {
         await this.homey.app.echoConnect.initAlexa({
           cookieData: '',
           amazonPage: amazonPage,
-          foceToken: true,
+          forceToken: true,
           closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
         });
 
@@ -538,11 +531,11 @@ class MyDriver extends Homey.Driver {
       try {
         const echoDevices = await this.homey.app.echoConnect.getEchoDevices();
         const devicesForHomey = this._formatDevicesForHomey(echoDevices);
-        this.log('Devices formatati:', devicesForHomey);
+        this.log('Devices formatted:', devicesForHomey);
 
         return devicesForHomey;
       } catch (error) {
-        this.error('Errore durante il recupero dei dispositivi:', error);
+        this.error('Error during device retrieval:', error);
 
         return [];
       }
@@ -608,4 +601,4 @@ class MyDriver extends Homey.Driver {
   }
 }
 
-module.exports = MyDriver;
+module.exports = EchoDriver;

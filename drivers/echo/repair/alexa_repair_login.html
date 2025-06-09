@@ -1,5 +1,5 @@
 <style>
-    /* Stile per il contenitore principale */
+    /* Main container styling */
     .main-container {
         position: absolute;
         top: 5px;
@@ -70,6 +70,10 @@
     #toggleRadioButtons {
         margin-left: auto;
     }
+
+    #radioButtonsContainer {
+        margin-top: 100px;
+    }
 </style>
 
 <div class="main-container">
@@ -89,19 +93,19 @@
                     <legend class="homey-form-radio-set-title" data-i18n="pair.radio.title" />
 
                     <label class="homey-form-radio">
-                        <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.de" />
+                        <input class="homey-form-radio-input" type="radio" name="amazon-region" value="amazon.de" />
                         <span class="homey-form-radio-checkmark" />
                         <span class="homey-form-radio-text" data-i18n="pair.radio.de" />
                     </label>
 
                     <label class="homey-form-radio">
-                        <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.com" />
+                        <input class="homey-form-radio-input" type="radio" name="amazon-region" value="amazon.com" />
                         <span class="homey-form-radio-checkmark" />
                         <span class="homey-form-radio-text" data-i18n="pair.radio.com" />
                     </label>
 
                     <label class="homey-form-radio">
-                        <input class="homey-form-radio-input" type="radio" name="radio-example" value="amazon.co.jp" />
+                        <input class="homey-form-radio-input" type="radio" name="amazon-region" value="amazon.co.jp" />
                         <span class="homey-form-radio-checkmark" />
                         <span class="homey-form-radio-text" data-i18n="pair.radio.jp" />
                     </label>
@@ -109,11 +113,12 @@
             </div>
         </fieldset>
 
-        <button onclick="apriPaginaWeb()" class="homey-button-primary-full" data-i18n="pair.button" />
+        <button onclick="openWebPage()" class="homey-button-primary-full" data-i18n="pair.button" />
     </div>
 
     <div class="domain-info">
-        <span data-i18n="pair.domain.text" />&nbsp;<span id="selectedDomain" /><a href="#" id="toggleRadioButtons" data-i18n="pair.domain.link" />
+        <span data-i18n="pair.domain.text" />&nbsp;<span id="selectedDomain" /><button type="button"
+            id="toggleRadioButtons" class="homey-button-secondary-small" data-i18n="pair.domain.link" />
     </div>
 </div>
 
@@ -130,19 +135,26 @@
     });
 
     Homey.on("serverReady", function () {
-        const bottone = document.querySelector('button[onclick="apriPaginaWeb()"]');
-        bottone.className = "homey-button-primary-full";
+        const bottone = document.querySelector('button[onclick="openWebPage()"]');
+        if (bottone) {
+            bottone.className = "homey-button-primary-full";
+        }
     });
 
-    function apriPaginaWeb() {
-        //window.open(loginUrl, '_blank');
-        Homey.popup(loginUrl);
-
-        Homey.showView("ending_loading");
+    function openWebPage() {
+        if (!loginUrl) return;        // Use Homey popup if available, otherwise fallback
+        if (typeof Homey !== 'undefined' && Homey.popup) {
+            Homey.popup(loginUrl);
+            if (Homey.showView) {
+                Homey.showView("ending_loading");
+            }
+        } else {
+            window.open(loginUrl, '_blank');
+        }
     }
 
     function selectRadioButton(value) {
-        const radioButtons = document.querySelectorAll('input[name="radio-example"]');
+        const radioButtons = document.querySelectorAll('input[name="amazon-region"]');
         for (const radioButton of radioButtons) {
             if (radioButton.value === value) {
                 radioButton.checked = true;
@@ -152,12 +164,13 @@
     }
 
     function updateSelectedDomain(domain) {
-        document.getElementById('selectedDomain').textContent = domain;
-        //Homey.__("pair.domain.text", { name: domain });
+        const selectedDomainEl = document.getElementById('selectedDomain');
+        if (selectedDomainEl) {
+            selectedDomainEl.textContent = domain;
+        }
     }
 
     document.getElementById('toggleRadioButtons').addEventListener('click', function (e) {
-        e.preventDefault();
         var container = document.getElementById('radioButtonsContainer');
         if (container.style.display === 'none') {
             container.style.display = 'block';
@@ -167,15 +180,19 @@
         }
     });
 
-    document.querySelectorAll('input[name="radio-example"]').forEach(function (radio) {
+    document.querySelectorAll('input[name="amazon-region"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
             amazonPage = this.value;
             updateSelectedDomain(amazonPage);
 
-            const bottone = document.querySelector('button[onclick="apriPaginaWeb()"]');
-            bottone.className = "homey-button-primary-full is-loading";
+            const bottone = document.querySelector('button[onclick="openWebPage()"]');
+            if (bottone) {
+                bottone.className = "homey-button-primary-full is-loading";
+            }
 
-            Homey.emit('amazonPage', amazonPage);
+            if (typeof Homey !== 'undefined' && Homey.emit) {
+                Homey.emit('amazonPage', amazonPage);
+            }
         });
     });
 </script>

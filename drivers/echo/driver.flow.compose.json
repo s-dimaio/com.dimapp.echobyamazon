@@ -147,6 +147,43 @@
           }
         }
       ]
+    },
+    {
+      "id": "echo-display",
+      "title": {
+        "en": "Set Echo Display",
+        "it": "Imposta il display dell'Echo"
+      },
+      "hint": {
+        "en": "Set Echo display status",
+        "it": "Imposta lo stato del display dell'Echo"
+      },
+      "titleFormatted": {
+        "en": "Set Echo display to [[power]]",
+        "it": "Imposta il display su [[power]]"
+      },
+      "args": [
+        {
+          "type": "dropdown",
+          "name": "power",
+          "values": [
+            {
+              "id": "on",
+              "label": {
+                "en": "On",
+                "it": "Acceso"
+              }
+            },
+            {
+              "id": "off",
+              "label": {
+                "en": "Off",
+                "it": "Spento"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

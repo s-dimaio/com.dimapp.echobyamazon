@@ -1,0 +1,16 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Audio Groups"
+  },
+  "titleTrue": {
+    "en": "Audio in group: On"
+  },
+  "titleFalse": {
+    "en": "Audio in group: Off"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "sensor",
+  "icon": "/assets/ic_echo_groups.svg"
+}

@@ -48,12 +48,16 @@
     "reminderEmpty": "Il testo del promemoria non può essere vuoto.",
     "messageEmpty": "Il testo del messaggio non può essere vuoto.",
     "announcementEmpty": "Il testo dell'annuncio non può essere vuoto.",
-    "commandEmpty": "Il testo del comando non può essere vuoto.",
+    "commandEmpty": "Il testo del comando non può essere vuoto.",    
     "routineEmpty": "Il nome della routine non può essere vuoto.",
     "volume": {
       "timeout": "Errore di volume (Timeout). Prova a cambiare il volume dal tuo Echo.",
       "generic": "Errore di volume. Se l'errore persiste prova a ricollegare il dispositivo."
-    },
+    },    
+    "invalidSerial": "Numero seriale del dispositivo non valido o vuoto.",
+    "invalidDevice": "Dispositivo non valido o dispositivo non trovato.",
+    "invalidPowerSetting": "Impostazione di alimentazione non valida. Deve essere 'on' o 'off'.",
+    "speakCommand": "Errore nell'invio del comando vocale al dispositivo Echo.",
     "generic": "Errore: se l'errore persiste prova a ricollegare il dispositivo.",
     "authenticationIssues": "Problemi di autenticazione: per risolvere prova a riparare il dispositivo.",
     "offline": "Questo dispositivo è offline. Controlla il  dispositivo e riprova",

@@ -1,0 +1,57 @@
+{
+  "title": {
+    "en": "Echo speak by serial number"
+  },
+  "hint": {
+        "en": "Choose the text that your Echo will say.",
+        "it": "Scegli il testo da far procnunciare al tuo Echo."
+  },
+  "titleFormatted": {
+    "en": "Echo device n. [[serial-number]] will [[type-speak]]: [[message]]",
+    "it": "Il dispositivo Echo n. [[serial-number]] [[type-speak]]: [[message]]"
+  },
+  "args": [
+    {
+      "type": "text",
+      "name": "message",
+      "placeholder": {
+        "en": "text here your message",
+        "it": "digita qui il tuo messaggio"
+      }
+    },
+    {
+      "type": "dropdown",
+      "name": "type-speak",
+      "values": [
+        {
+          "id": "speak",
+          "label": {
+            "en": "speak",
+            "it": "dirà"
+          }
+        },
+        {
+          "id": "announce",
+          "label": {
+            "en": "announce",
+            "it": "farà un annuncio"
+          }
+        },
+        {
+          "id": "whisper",
+          "label": {
+            "en": "whisper",
+            "it": "sussurrerà"
+          }
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "serial-number",
+      "placeholder": {
+        "en": "Echo Serial Number"
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.dimapp.echobyamazon",
-  "version": "2.1.1",
+  "version": "2.5.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -44,6 +44,14 @@
     "disconnectAlexa": {
       "method": "POST",
       "path": "/disconnectAlexa"
+    },
+    "getSystemStatus": {
+      "method": "GET",
+      "path": "/getSystemStatus"
+    },
+    "healthCheck": {
+      "method": "GET",
+      "path": "/healthCheck"
     }
   },
   "flow": {
@@ -63,61 +71,61 @@
     "actions": [
       {
         "title": {
-          "en": "Play to Echo group"
+          "en": "Echo speak by serial number"
         },
         "hint": {
-          "en": "Manage the playback of songs within a Echo group",
-          "it": "Gestisci la riproduzione di brani all'interno di un gruppo Echo"
+          "en": "Choose the text that your Echo will say.",
+          "it": "Scegli il testo da far procnunciare al tuo Echo."
         },
         "titleFormatted": {
-          "en": "[[command]] to the group [[group]]",
-          "it": "[[command]] nel gruppo [[group]]"
+          "en": "Echo device n. [[serial-number]] will [[type-speak]]: [[message]]",
+          "it": "Il dispositivo Echo n. [[serial-number]] [[type-speak]]: [[message]]"
         },
         "args": [
           {
-            "type": "autocomplete",
-            "name": "group",
+            "type": "text",
+            "name": "message",
             "placeholder": {
-              "en": "Text here the name of the group",
-              "it": "Digita il nome del gruppo"
+              "en": "text here your message",
+              "it": "digita qui il tuo messaggio"
             }
           },
           {
             "type": "dropdown",
-            "name": "command",
-            "title": {
-              "en": "Choose a command",
-              "it": "Scegli un comando"
-            },
+            "name": "type-speak",
             "values": [
               {
-                "id": "play",
-                "title": {
-                  "en": "Play"
+                "id": "speak",
+                "label": {
+                  "en": "speak",
+                  "it": "dirà"
                 }
               },
               {
-                "id": "pause",
-                "title": {
-                  "en": "Pause"
+                "id": "announce",
+                "label": {
+                  "en": "announce",
+                  "it": "farà un annuncio"
                 }
               },
               {
-                "id": "previous",
-                "title": {
-                  "en": "Previous"
-                }
-              },
-              {
-                "id": "next",
-                "title": {
-                  "en": "Next"
+                "id": "whisper",
+                "label": {
+                  "en": "whisper",
+                  "it": "sussurrerà"
                 }
               }
             ]
+          },
+          {
+            "type": "text",
+            "name": "serial-number",
+            "placeholder": {
+              "en": "Echo Serial Number"
+            }
           }
         ],
-        "id": "play-to-echo-group"
+        "id": "speak-to-serial"
       },
       {
         "id": "echo-speak",
@@ -296,6 +304,48 @@
             }
           }
         ]
+      },
+      {
+        "id": "echo-display",
+        "title": {
+          "en": "Set Echo Display",
+          "it": "Imposta il display dell'Echo"
+        },
+        "hint": {
+          "en": "Set Echo display status",
+          "it": "Imposta lo stato del display dell'Echo"
+        },
+        "titleFormatted": {
+          "en": "Set Echo display to [[power]]",
+          "it": "Imposta il display su [[power]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          },
+          {
+            "type": "dropdown",
+            "name": "power",
+            "values": [
+              {
+                "id": "on",
+                "label": {
+                  "en": "On",
+                  "it": "Acceso"
+                }
+              },
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "it": "Spento"
+                }
+              }
+            ]
+          }
+        ]
       }
     ]
   },
@@ -306,15 +356,17 @@
       },
       "class": "speaker",
       "capabilities": [
-        "speaker_playing",
-        "speaker_next",
-        "speaker_prev",
-        "speaker_shuffle",
-        "speaker_repeat",
-        "speaker_artist",
         "speaker_album",
+        "speaker_artist",
+        "speaker_next",
+        "speaker_playing",
+        "speaker_prev",
+        "speaker_repeat",
+        "volume_set",
+        "speaker_shuffle",
         "speaker_track",
-        "volume_set"
+        "echo_volume",
+        "echo_groups"
       ],
       "platforms": [
         "cloud",
@@ -370,7 +422,8 @@
         {
           "type": "group",
           "label": {
-            "en": "Device details"
+            "en": "Device details",
+            "it": "Dettagli del dispositivo"
           },
           "children": [
             {
@@ -387,25 +440,60 @@
               "id": "deviceType",
               "type": "label",
               "label": {
-                "en": "Type"
+                "en": "Type",
+                "it": "Modello"
               },
               "hint": {
-                "en": "Code that identifies the device model."
+                "en": "Code that identifies the device model.",
+                "it": "Codice che identifica il modello del dispositivo."
               }
             },
             {
               "id": "serialNumber",
               "type": "label",
               "label": {
-                "en": "Serial"
+                "en": "Serial Number",
+                "it": "Numero seriale"
               },
               "hint": {
-                "en": "Unique code that identifies the device."
+                "en": "Unique code that identifies the device.",
+                "it": "Codice univoco che identifica il dispositivo."
               }
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "capabilities": {
+    "echo_groups": {
+      "type": "boolean",
+      "title": {
+        "en": "Audio Groups"
+      },
+      "titleTrue": {
+        "en": "Audio in group: On"
+      },
+      "titleFalse": {
+        "en": "Audio in group: Off"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "sensor",
+      "icon": "/assets/ic_echo_groups.svg"
+    },
+    "echo_volume": {
+      "type": "number",
+      "title": {
+        "en": "Volume"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "%"
+      },
+      "icon": "/assets/ic_echo_volume.svg"
+    }
+  }
 }

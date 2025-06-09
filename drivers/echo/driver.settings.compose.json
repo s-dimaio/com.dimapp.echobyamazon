@@ -2,7 +2,8 @@
     {
         "type": "group",
         "label": {
-            "en": "Device details"
+            "en": "Device details",
+            "it": "Dettagli del dispositivo"
         },
         "children": [
             {
@@ -19,20 +20,24 @@
                 "id": "deviceType",
                 "type": "label",
                 "label": {
-                    "en": "Type"
+                    "en": "Type",
+                    "it": "Modello"
                 },
                 "hint": {
-                    "en": "Code that identifies the device model."
+                    "en": "Code that identifies the device model.",
+                    "it": "Codice che identifica il modello del dispositivo."
                 }
             },
             {
                 "id": "serialNumber",
                 "type": "label",
                 "label": {
-                    "en": "Serial"
+                    "en": "Serial Number",
+                    "it": "Numero seriale"
                 },
                 "hint": {
-                    "en": "Unique code that identifies the device."
+                    "en": "Unique code that identifies the device.",
+                    "it": "Codice univoco che identifica il dispositivo."
                 }
             }
         ]

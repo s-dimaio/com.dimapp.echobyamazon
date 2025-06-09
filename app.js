@@ -3,14 +3,35 @@
 const Homey = require('homey');
 const { EchoConnect } = require('./lib/EchoConnect')
 const { TaskScheduler } = require('./lib/TaskScheduler');
-let playGroupActionCard;
 
 
-class MyApp extends Homey.App {
+class EchoApp extends Homey.App {
+
+  // Configuration constants
+  static SCHEDULER_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours
 
 
 
   _registerAlexaListener() {
+    this.echoConnect.on('alexaCalled', (alexaCallData) => {
+      this.log('[registerAlexaListener] alexaCalled listener - alexaCallData:', alexaCallData);
+
+      if (!this.alexaCalledToken) {
+        this.log('[registerAlexaListener] alexaCalledToken not available');
+        return;
+      }
+
+      if (!alexaCallData?.deviceSerial) {
+        this.log('[registerAlexaListener] deviceSerial not found in alexaCallData');
+        return;
+      }
+
+      // Set the token value with the device serial number
+      this.alexaCalledToken.setValue(alexaCallData.deviceSerial).catch((error) => {
+        this.error('[registerAlexaListener] Error setting token value:', error);
+      });
+    });
+
     this.echoConnect.on('pushDisconnected', (willReconnect, reason) => {
       this.log('[registerAlexaListener] pushDisconnected listener - willReconnect:', willReconnect);
 
@@ -26,7 +47,7 @@ class MyApp extends Homey.App {
     });
 
     this.echoConnect.on('alexaConnected', async (echoDevices) => {
-      this.log('[registerAlexaListener] alexaConnected listener - Inizializzazione completata - dispositivi trovati:', echoDevices.length);
+      this.log('[registerAlexaListener] alexaConnected listener - Initialization completed - devices found:', echoDevices.length);
 
       const isPushConnected = this.echoConnect.isPushConnected();
       this.log('[registerAlexaListener] alexaConnected listener - isPushConnected: ', isPushConnected);
@@ -36,29 +57,7 @@ class MyApp extends Homey.App {
         this.echoConnect.initPushMessage();
       }
 
-      playGroupActionCard.registerArgumentAutocompleteListener(
-        "group",
-        async (query, args) => {
-          try {
-            const echoGroup = await this.echoConnect.getAudioGroupsList();
-            const results = echoGroup.map(item => ({
-              name: item.name,
-              id: item.id
-            }));
 
-            this.log('[registerAlexaListener] playGroupActionCard:', JSON.stringify(results, null, 2));
-
-            // filter based on the query
-            return results.filter((result) => {
-              return result.name.toLowerCase().includes(query.toLowerCase());
-            });
-
-          } catch (error) {
-            console.error("[registerAlexaListener] Error getting audio groups:", error);
-            return [];
-          }
-        }
-      );
 
       // Execute callback if it has been set
       if (this.alexaConnectedCallback) {
@@ -80,7 +79,6 @@ class MyApp extends Homey.App {
     this.echoConnect.on('cookieGenerated', (newLogIn, cookieData) => {
       this.log('[registerAlexaListener] cookieGenerated listener - saving new cookie on settings');
 
-      //this.homey.settings.set('cookie', JSON.stringify(cookieData));
       this.homey.settings.set('cookie', cookieData);
     });
   }
@@ -113,17 +111,17 @@ class MyApp extends Homey.App {
     }
   }
 
-  _checkStatudDevices() {
+  _checkStatusDevices() {
     try {
       const devices = this.homey.drivers.getDriver('echo').getDevices();
 
       devices.forEach(async (device, index) => {
         const isOnline = await this.echoConnect.isOnLine(device.getData().id);
         if (isOnline) {
-          this.log(`[checkStatudDevices] Device ${device.getName()} is online.`);
+          this.log(`[checkStatusDevices] Device ${device.getName()} is online.`);
           device.setAvailable().catch(this.error);
         } else {
-          this.error(`[checkStatudDevices] Device ${device.getName()} is offline.`);
+          this.error(`[checkStatusDevices] Device ${device.getName()} is offline.`);
           device.setUnavailable(this.homey.__("error.offline")).catch(this.error);
         }
       });
@@ -143,8 +141,10 @@ class MyApp extends Homey.App {
   async onInit() {
     this.log('[onInit] MyApp has been initialized');
 
+
     this.echoConnect = new EchoConnect(false);
 
+    this.alexaCalledToken = null;
     this._registerAlexaListener();
 
     const cookieData = this.homey.settings.get('cookie');
@@ -156,9 +156,9 @@ class MyApp extends Homey.App {
 
     this.disableAllDevices = false;
 
-    // Create a TaskScheduler instance to run a task every 5 seconds
+    // Create a TaskScheduler instance
     this.scheduler = new TaskScheduler(
-      this.homey,           // Pass the Homey object to the TaskScheduler to use homey.setTimeout() and homey.clearTimeout()
+      this.homey,                     // Pass the Homey object to the TaskScheduler to use homey.setTimeout() and homey.clearTimeout()
       async () => {
         this.log("[onInit] Scheduler: Task started");
 
@@ -168,7 +168,7 @@ class MyApp extends Homey.App {
           if (isConnected) {
             this.log('[onInit] Scheduler: Alexa is connected');
             this._enableAllDevices();
-            this._checkStatudDevices();
+            this._checkStatusDevices();
           } else {
             this.error('[onInit] Scheduler: Alexa is not connected');
             this._disableAllDevices(this.homey.__("error.authenticationIssues"));
@@ -185,44 +185,61 @@ class MyApp extends Homey.App {
             default:
               this.error('[onInit] Scheduler: Generic Error:', error);
               this._disableAllDevices(this.homey.__("error.generic"));
+              break;
           }
         }
 
         this.log("[onInit] Scheduler: Task finished.");
-      },                      // Define an asynchronous task
-      4 * 60 * 60 * 1000,     // Set scheduler interval (default: 1 hour) - 1 * 60 * 60 * 1000
-      false);                 // Enable/Disable logging
+      },                              // Define an asynchronous task
+      EchoApp.SCHEDULER_INTERVAL,     // Set scheduler interval (4 hours)
+      false);                         // Enable/Disable logging
 
     // Start the scheduler
     this.scheduler.start();
 
 
-    playGroupActionCard = this.homey.flow.getActionCard("play-to-echo-group");
-    playGroupActionCard.registerRunListener(async (args) => {
-      //throw new Error ('Test Error!! oops');
 
-      this.log(`[onInit] setEchoFlowActionCard: ${JSON.stringify(args, null, 2)}`);
+    // Add the ActionCard speak-to-serial
+    this.speakToSerialActionCard = this.homey.flow.getActionCard("speak-to-serial");
+    this.speakToSerialActionCard.registerRunListener(async (args) => {
+      this.log(`[onInit] speakToSerialActionCard: ${JSON.stringify(args, null, 2)}`);
 
-      const id = args.group.id;
-      const name = args.group.name;
-      const command = args.command;
+      const serialNumber = args['serial-number'];
+      const message = args.message;
+      const speakType = args['type-speak']; // 'speak', 'announce', or 'whisper'
 
-      this.log(`[onInit] setEchoFlowActionCard - echo-speak flow message: ${command}`);
+      this.log(`[onInit] speakToSerialActionCard - Device: ${serialNumber}, Type: ${speakType}, Message: ${message}`);
 
       try {
-        //await this.homey.drivers.getDriver('echo').executeEchoAction(id, 'ciao', 'announce');
-        // Try to change the playback to play or pause
-        await this.echoConnect.changePlayback(id, command);
-
-        this.log('[onInit] Routine command sent successfully');
+        await this.echoConnect.speakEcho(serialNumber, message, speakType);
+        this.log('[onInit] Speak command sent successfully');
       } catch (error) {
-        this.error('[onInit] Error calling routine:', error);
+        this.error('[onInit] Error sending speak command:', error);
+
+        // Switch based on error.code for specific localized messages
+        switch (error?.code) {
+          case 'INVALID_SERIAL':
+            throw new Error(this.homey.__("error.invalidSerial"));
+
+          case 'ERROR_SPEAK':
+            throw new Error(this.homey.__("error.speakCommand"));
+
+          default:
+            throw new Error(this.homey.__("error.generic"));
+        }
       }
     });
 
     this.log('[onInit] isCookieEmptyOrNull:', this.echoConnect.isCookieEmptyOrNull(cookieData));
 
     try {
+      this.alexaCalledToken = await this.homey.flow.createToken("alexa_called_token", {
+        type: "string",
+        title: "Alexa called by",
+      });
+
+      this.log('[onInit] AlexaCalledToken created successfully');
+
       const isConnected = await this.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
 
       if (isConnected) {
@@ -239,45 +256,14 @@ class MyApp extends Homey.App {
         case 'ERROR_AUTHENTICATION':
           this.error(`[onInit] Authentication - ${error?.message}`);
           this.disableAllDevices = true;
-          break;
+          throw new Error(this.homey.__("error.authenticationIssues"));
 
         default:
           this.error('[onInit] Generic Error:', error);
           this.disableAllDevices = true;
+          throw new Error(this.homey.__("error.generic"));
       }
     }
-
-
-    // if (!this.echoConnect.isCookieEmptyOrNull(cookieData)) {
-    //   try {
-    //     const isAuthenticated = await this.echoConnect.isAuthenticated();
-    //     if (isAuthenticated) {
-    //       this.log('[onInit] - You are already authenticated on Alexa servers');
-
-    //       const isPushConnected = this.echoConnect.isPushConnected();
-    //       this.log('[onInit] - isPushConnected: ', isPushConnected);
-
-    //       if (isPushConnected === false) {
-    //         this.log('[onInit] - initPushMessage called!')
-    //         this.echoConnect.initPushMessage()
-    //       }
-
-    //       //const echoGroup = this.echoConnect.getAudioGroupsList();
-    //       //this.log('echoGroup:', JSON.stringify(echoGroup, null, 2));
-
-    //     } else {
-    //       this.log('[onInit] - You need to re-authenticate.');
-
-    //       await this.echoConnect.initAlexa({
-    //         cookieData: cookieData,
-    //         amazonPage: amazonPage,
-    //         closeWindowImageUrl: 'https://homey.app/img/heading/homey@2x.webp'
-    //       });
-    //     }
-    //   } catch (error) {
-    //     this.error('[onInit] - Error during initialization:', error);
-    //   }
-    // }
   }
 
   async onUninit() {
@@ -289,4 +275,4 @@ class MyApp extends Homey.App {
   }
 }
 
-module.exports = MyApp;
+module.exports = EchoApp;

@@ -48,12 +48,16 @@
     "reminderEmpty": "Reminder text cannot be empty.",
     "messageEmpty": "Message text cannot be empty.",
     "announcementEmpty": "Announcement text cannot be empty.",
-    "commandEmpty": "Command text cannot be empty.",
+    "commandEmpty": "Command text cannot be empty.",    
     "routineEmpty": "Routine name cannot be empty.",
     "volume": {
       "timeout": "Volume error (Timeout). Try changing volume from your Echo.",
       "generic": "Volume error. If the error persists try reconnecting the device."
-    },
+    },    
+    "invalidSerial": "Invalid or empty device serial number.",
+    "invalidDevice": "Invalid device or device not found.",
+    "invalidPowerSetting": "Invalid power setting. Must be 'on' or 'off'.",
+    "speakCommand": "Error sending voice command to Echo device.",
     "generic": "Error: if the error persists try reconnecting the device.",
     "authenticationIssues": "Authentication issues: to fix try repairing the device.",
     "offline": "This device is offline. Please check your device and try again.",
