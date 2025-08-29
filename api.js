@@ -334,6 +334,41 @@ module.exports = {
   },
 
   /**
+   * Initialize push message connection
+   * @param {Object} params - The parameters object
+   * @param {Object} params.homey - The Homey object
+   * @returns {Promise<Object>} Initialization result
+   * @throws {ApiError} If initialization fails
+   * @example
+   * const result = await initPushConnection({ homey });
+   */
+  async initPushConnection({ homey }) {
+    console.log('API - initPushConnection - called');
+
+    try {
+      validateApiParams({ homey });
+
+      await homey.app.echoConnect.initPushMessage();
+
+      console.log('API - initPushConnection - push connection initialized successfully');
+
+      return {
+        success: true,
+        message: 'Push connection initialized successfully',
+        timestamp: new Date().toISOString()
+      };
+
+    } catch (error) {
+      console.error('API - initPushConnection - error:', error.message);
+      throw new ApiError(
+        ERROR_CODES.WEBSOCKET_STATUS,
+        `Push connection initialization failed: ${error.message}`,
+        error
+      );
+    }
+  },
+
+  /**
    * Health check endpoint for monitoring
    * @param {Object} params - The parameters object
    * @param {Object} params.homey - The Homey object

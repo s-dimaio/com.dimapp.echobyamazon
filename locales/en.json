@@ -28,7 +28,8 @@
         "ok": "WebSocket is working correctly",
         "error": "WebSocket is NOT working"
       },
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "reconnectWS": "Reconnect"
     },
     "devices": {
       "title": "Alexa Devices",

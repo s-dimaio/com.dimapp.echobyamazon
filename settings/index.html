@@ -58,7 +58,10 @@
     <div class="homey-form-group">
       <fieldset class="homey-form-fieldset">        <div class="homey-form-legend-container">
           <legend class="homey-form-legend" data-i18n="settings.connection.title"></legend>
-          <button id="refresh" class="homey-button-secondary-small" data-i18n="settings.connection.refresh"></button>
+          <div style="display: flex; gap: 10px;">
+            <button id="reconnectWS" class="homey-button-secondary-small" data-i18n="settings.connection.reconnectWS"></button>
+            <button id="refresh" class="homey-button-secondary-small" data-i18n="settings.connection.refresh"></button>
+          </div>
         </div>
 
         <div>
@@ -98,6 +101,7 @@
       var saveElement = document.getElementById("save");
       var disconnectElement = document.getElementById("disconnect");
       var refreshElement = document.getElementById("refresh");
+      var reconnectWSElement = document.getElementById("reconnectWS");
 
       Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
@@ -107,6 +111,32 @@
       Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
         wsElement.textContent = result.msg;
+      });
+
+      reconnectWSElement.addEventListener("click", function (e) {
+        // Disable button during reconnection
+        reconnectWSElement.disabled = true;
+        reconnectWSElement.textContent = "Reconnecting...";
+        
+        Homey.api('POST', '/initPushConnection', undefined, (err, result) => {
+          // Re-enable button
+          reconnectWSElement.disabled = false;
+          reconnectWSElement.setAttribute('data-i18n', 'settings.connection.reconnectWS');
+          
+          if (err) {
+            Homey.alert(err);
+            return;
+          }
+          
+          // Show success message
+          Homey.alert(result.message);
+          
+          // Refresh WebSocket status after reconnection
+          Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
+            if (err) return Homey.alert(err);
+            wsElement.textContent = result.msg;
+          });
+        });
       });
 
       refreshElement.addEventListener("click", function (e) {
