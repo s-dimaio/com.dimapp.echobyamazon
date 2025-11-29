@@ -1,6 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
+const crypto = require('crypto');
 const { EchoConnect } = require('./lib/EchoConnect')
 const { TaskScheduler } = require('./lib/TaskScheduler');
 
@@ -8,27 +9,73 @@ const { TaskScheduler } = require('./lib/TaskScheduler');
 class EchoApp extends Homey.App {
 
   // Configuration constants
-  static SCHEDULER_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours
+  static SCHEDULER_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours
+  static DEBUG_MODE = false;
 
+
+  /**
+   * Method to obtain a unique ID for the installation.
+   * Generates and saves the ID in settings the first time it is called.
+   * @returns {string} The unique ID for this specific installation.
+   */
+  _getInstallUniqueId() {
+    // Check if the ID is already saved in settings
+    let uniqueId = this.homey.settings.get('installUniqueId');
+
+    if (uniqueId) {
+      this.log('Installation ID found in settings (previously used).');
+      return uniqueId;
+    }
+
+    // if the ID is not present (first run), generate a new one
+    // We use a UUID v4, which is universally accepted as a random unique ID.
+    uniqueId = crypto.randomUUID();
+
+    this.log(`Generated new unique ID: ${uniqueId}`);
+
+    // Save the newly generated ID in settings
+    // ManagerSettings (this.homey.settings) persists data locally.
+    this.homey.settings.set('installUniqueId', uniqueId);
+
+    return uniqueId;
+  }
 
 
   _registerAlexaListener() {
-    this.echoConnect.on('alexaCalled', (alexaCallData) => {
-      this.log('[registerAlexaListener] alexaCalled listener - alexaCallData:', alexaCallData);
+    this.echoConnect.on('deviceActivity', async (activityData) => {
+      this.log('[registerAlexaListener] deviceActivity listener - activityData:', activityData);
 
       if (!this.alexaCalledToken) {
         this.log('[registerAlexaListener] alexaCalledToken not available');
         return;
       }
 
-      if (!alexaCallData?.deviceSerial) {
-        this.log('[registerAlexaListener] deviceSerial not found in alexaCallData');
+      if (!activityData?.deviceSerial) {
+        this.log('[registerAlexaListener] deviceSerial not found in activityData');
         return;
       }
 
       // Set the token value with the device serial number
-      this.alexaCalledToken.setValue(alexaCallData.deviceSerial).catch((error) => {
-        this.error('[registerAlexaListener] Error setting token value:', error);
+      this.alexaCalledToken.setValue(activityData.deviceSerial)
+        .then(() => {
+          this.log('[registerAlexaListener] Token value set successfully for deviceSerial:', activityData.deviceSerial);
+        })
+        .catch((error) => {
+          this.error('[registerAlexaListener] Error setting token value:', error);
+        });
+
+      // Get the device by serial number
+      const devices = this.homey.drivers.getDriver('echo').getDevices();
+      const device = devices.find(d => d.getData().id === activityData.deviceSerial);
+      if (!device) return; // If not found, exit
+
+      // Activate the Device Trigger Card
+      const echoActivityTrigger = this.homey.flow.getDeviceTriggerCard('echo-activity');
+      await echoActivityTrigger.trigger(device, {
+        command: activityData.command || '',
+        response: activityData.response || '',
+        domain: activityData.domain || '',
+        intent: activityData.intent || ''
       });
     });
 
@@ -83,50 +130,69 @@ class EchoApp extends Homey.App {
     });
   }
 
-  _disableAllDevices(msg) {
+  async _syncAllDevices(forceUnavailable = false, unavailableMessage = null) {
     try {
       const devices = this.homey.drivers.getDriver('echo').getDevices();
 
-      devices.forEach((device, index) => {
-        this.log('[disableAllDevices] Try to disable', device.getName());
+      for (const device of devices) {
+        try {
+          if (forceUnavailable) {
+            // Force all devices as unavailable (e.g. authentication issues)
+            this.log(`[syncAllDevices] Forcing device ${device.getName()} unavailable: ${unavailableMessage}`);
+            await device.setUnavailable(unavailableMessage).catch(this.error);
+            //await device.setStoreValue('lastIsOnline', false).catch(this.error);
+            continue;
+          }
 
-        device.setUnavailable(msg).catch(this.error);
-      });
-    } catch (error) {
-      this.error('[disableAllDevices] Error:', error);
-    }
-  }
+          // Check the actual status of the device
+          const serial = device.getData().id;
+          const prevOnline = device.getStoreValue('lastIsOnline');
+          const isOnline = await this.echoConnect.isOnLine(serial);
+          const deviceAvailable = device.getAvailable();
 
-  _enableAllDevices() {
-    try {
-      const devices = this.homey.drivers.getDriver('echo').getDevices();
+          this.log(`[syncAllDevices] Checking device ${device.getName()} - available: ${deviceAvailable} - lastIsOnline: ${prevOnline} - isOnline: ${isOnline}`);
 
-      devices.forEach((device, index) => {
-        this.log('[enableAllDevices] Try to enable', device.getName());
+          if (prevOnline === undefined) {
+            // First synchronization: set status without trigger
+            if (isOnline) {
+              this.log(`[syncAllDevices] Device ${device.getName()} is online.`);
+              await device.setAvailable().catch(this.error);
+            } else {
+              this.log(`[syncAllDevices] Device ${device.getName()} is offline.`);
+              await device.setUnavailable(this.homey.__("error.offline")).catch(this.error);
+            }
+          } else if (prevOnline !== isOnline) {
+            // State change: update and activate triggers
+            if (isOnline) {
+              this.log(`[syncAllDevices] Device ${device.getName()} changed to online.`);
+              await device.setAvailable().catch(this.error);
+              const onlineStateTrigger = device.homey.flow.getDeviceTriggerCard('state-online');
+              await onlineStateTrigger.trigger(device);
+            } else {
+              this.log(`[syncAllDevices] Device ${device.getName()} changed to offline.`);
+              await device.setUnavailable(this.homey.__("error.offline")).catch(this.error);
+              const offlineStateTrigger = device.homey.flow.getDeviceTriggerCard('state-offline');
+              await offlineStateTrigger.trigger(device);
+            }
+          } else {
+            // No state change: check consistency
+            if (isOnline && !deviceAvailable) {
+              this.log(`[syncAllDevices] Device ${device.getName()} is online but marked as unavailable. Fixing...`);
+              await device.setAvailable().catch(this.error);
+            } else if (!isOnline && deviceAvailable) {
+              this.log(`[syncAllDevices] Device ${device.getName()} is offline but marked as available. Fixing...`);
+              await device.setUnavailable(this.homey.__("error.offline")).catch(this.error);
+            }
+          }
 
-        device.setAvailable().catch(this.error);
-      });
-    } catch (error) {
-      this.error('[enableAllDevices] Error:', error);
-    }
-  }
-
-  _checkStatusDevices() {
-    try {
-      const devices = this.homey.drivers.getDriver('echo').getDevices();
-
-      devices.forEach(async (device, index) => {
-        const isOnline = await this.echoConnect.isOnLine(device.getData().id);
-        if (isOnline) {
-          this.log(`[checkStatusDevices] Device ${device.getName()} is online.`);
-          device.setAvailable().catch(this.error);
-        } else {
-          this.error(`[checkStatusDevices] Device ${device.getName()} is offline.`);
-          device.setUnavailable(this.homey.__("error.offline")).catch(this.error);
+          // Save the current state
+          await device.setStoreValue('lastIsOnline', isOnline).catch(this.error);
+        } catch (error) {
+          this.error(`[syncAllDevices] Error handling device ${device.getName()}:`, error);
         }
-      });
+      }
     } catch (error) {
-      this.error('[checkStatudDevices] Error:', error);
+      this.error('[syncAllDevices] Error:', error);
     }
   }
 
@@ -142,7 +208,10 @@ class EchoApp extends Homey.App {
     this.log('[onInit] MyApp has been initialized');
 
 
-    this.echoConnect = new EchoConnect(false);
+    const installationId = this._getInstallUniqueId();
+    this.log('[onInit] Installation ID:', installationId);
+
+    this.echoConnect = new EchoConnect(EchoApp.DEBUG_MODE, installationId);
 
     this.alexaCalledToken = null;
     this._registerAlexaListener();
@@ -167,11 +236,13 @@ class EchoApp extends Homey.App {
 
           if (isConnected) {
             this.log('[onInit] Scheduler: Alexa is connected');
-            this._enableAllDevices();
-            this._checkStatusDevices();
+            // Test - call initPushMessage every time even if already connected
+            this.echoConnect.initPushMessage();
+
+            await this._syncAllDevices();
           } else {
             this.error('[onInit] Scheduler: Alexa is not connected');
-            this._disableAllDevices(this.homey.__("error.authenticationIssues"));
+            await this._syncAllDevices(true, this.homey.__("error.authenticationIssues"));
           }
         } catch (error) {
           switch (error?.code) {
@@ -179,12 +250,12 @@ class EchoApp extends Homey.App {
             case 'ERROR_PUSH':
             case 'ERROR_AUTHENTICATION':
               this.error(`[onInit] Scheduler: Authentication - ${error?.message}`);
-              this._disableAllDevices(this.homey.__("error.authenticationIssues"));
+              await this._syncAllDevices(true, this.homey.__("error.authenticationIssues"));
               break;
 
             default:
               this.error('[onInit] Scheduler: Generic Error:', error);
-              this._disableAllDevices(this.homey.__("error.generic"));
+              await this._syncAllDevices(true, this.homey.__("error.generic"));
               break;
           }
         }

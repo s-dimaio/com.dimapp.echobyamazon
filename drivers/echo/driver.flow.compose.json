@@ -185,5 +185,86 @@
         }
       ]
     }
+  ],
+  "triggers": [
+    {
+      "id": "echo-activity",
+      "title": {
+        "en": "Echo starts an activity",
+        "it": "Echo inizia un'attività"
+      },
+      "hint": {
+        "en": "Triggered when yout Echo device start an activity",
+        "it": "Si attiva quando il tuo dispositivo Echo risponde ad un comando"
+      },
+      "tokens": [
+        {
+          "type": "string",
+          "name": "command",
+          "title": {
+            "en": "Command",
+            "it": "Comando"
+          },
+          "example": {
+            "en": "What time is it?",
+            "it": "Che ore sono?"
+          }
+        },
+        {
+          "type": "string",
+          "name": "response",
+          "title": {
+            "en": "Response",
+            "it": "Risposta"
+          },
+          "example": {
+            "en": "It's eight o'clock",
+            "it": "Sono le otto in punto"
+          }
+        },
+        {
+          "type": "string",
+          "name": "domain",
+          "title": {
+            "en": "Domain"
+          },
+          "example": {
+            "en": "Global"
+          }
+        },
+        {
+          "type": "string",
+          "name": "intent",
+          "title": {
+            "en": "Intent"
+          },
+          "example": {
+            "en": "WhatTimeIntent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "state-online",
+      "title": {
+        "en": "Your Echo is back online",
+        "it": "Il tuo Echo torna online"
+      },
+      "hint": {
+        "en": "Triggered when your Echo device is back online",
+        "it": "Si attiva quando il tuo dispositivo Echo torna online"
+      }
+    },
+    {
+      "id": "state-offline",
+      "title": {
+        "en": "Your Echo is offline",
+        "it": "Il tuo Echo è andato offline"
+      },
+      "hint": {
+        "en": "Triggered when your Echo device is offline",
+        "it": "Si attiva quando il tuo dispositivo Echo va offline"
+      }
+    }
   ]
 }

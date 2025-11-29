@@ -18,6 +18,7 @@
     }
   },
   "settings": {
+    "uniqueId": "ID Unico App",
     "connection": {
       "title": "Connection Status",
       "server": {

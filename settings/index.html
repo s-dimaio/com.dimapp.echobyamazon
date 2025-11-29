@@ -56,12 +56,17 @@
 <body>
   <div class="content">
     <div class="homey-form-group">
-      <fieldset class="homey-form-fieldset">        <div class="homey-form-legend-container">
+      <label class="homey-form-label" for="installUniqueId" data-i18n="settings.uniqueId"></label>
+      <input class="homey-form-input" id="installUniqueId" type="text" value="" readonly />
+    </div>
+
+    <div class="homey-form-group">
+      <fieldset class="homey-form-fieldset">
+        <div class="homey-form-legend-container">
           <legend class="homey-form-legend" data-i18n="settings.connection.title"></legend>
-          <div style="display: flex; gap: 10px;">
-            <button id="reconnectWS" class="homey-button-secondary-small" data-i18n="settings.connection.reconnectWS"></button>
-            <button id="refresh" class="homey-button-secondary-small" data-i18n="settings.connection.refresh"></button>
-          </div>
+          <!-- <button id="reconnectWS" class="homey-button-secondary-small"
+              data-i18n="settings.connection.reconnectWS"></button> -->
+          <button id="refresh" class="homey-button-secondary-small" data-i18n="settings.connection.refresh"></button>
         </div>
 
         <div>
@@ -75,7 +80,8 @@
     </div>
 
     <div class="homey-form-group">
-      <fieldset class="homey-form-fieldset">        <div class="homey-form-legend-container">
+      <fieldset class="homey-form-fieldset">
+        <div class="homey-form-legend-container">
           <legend class="homey-form-legend" data-i18n="settings.devices.title"></legend>
           <button id="save" class="homey-button-secondary-small" data-i18n="settings.devices.link"></button>
         </div>
@@ -98,10 +104,18 @@
 
       var serverElement = document.getElementById("server");
       var wsElement = document.getElementById("ws");
+      var installUniqueIdElement = document.getElementById("installUniqueId");
       var saveElement = document.getElementById("save");
       var disconnectElement = document.getElementById("disconnect");
       var refreshElement = document.getElementById("refresh");
-      var reconnectWSElement = document.getElementById("reconnectWS");
+      //var reconnectWSElement = document.getElementById("reconnectWS");
+
+      // Load the stored setting and populate the input on load
+      Homey.get("installUniqueId", function (err, value) {
+        if (err) return Homey.alert(err);
+        installUniqueIdElement.value = value || "";
+      });
+
 
       Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
@@ -113,31 +127,22 @@
         wsElement.textContent = result.msg;
       });
 
-      reconnectWSElement.addEventListener("click", function (e) {
-        // Disable button during reconnection
-        reconnectWSElement.disabled = true;
-        reconnectWSElement.textContent = "Reconnecting...";
-        
-        Homey.api('POST', '/initPushConnection', undefined, (err, result) => {
-          // Re-enable button
-          reconnectWSElement.disabled = false;
-          reconnectWSElement.setAttribute('data-i18n', 'settings.connection.reconnectWS');
-          
-          if (err) {
-            Homey.alert(err);
-            return;
-          }
-          
-          // Show success message
-          Homey.alert(result.message);
-          
-          // Refresh WebSocket status after reconnection
-          Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
-            if (err) return Homey.alert(err);
-            wsElement.textContent = result.msg;
-          });
-        });
-      });
+      // reconnectWSElement.addEventListener("click", function (e) {
+      //   Homey.api('POST', '/initPushConnection', undefined, (err, result) => {
+      //     if (err) {
+      //       Homey.alert(err);
+      //       return;
+      //     }
+
+      //     Homey.api('GET', '/getWebSocketStatus', undefined, (err, result) => {
+      //       if (err) return Homey.alert(err);
+      //       wsElement.textContent = result.msg;
+      //     });
+
+      //     // Show success message
+      //     Homey.alert(result.message);
+      //   });
+      // });
 
       refreshElement.addEventListener("click", function (e) {
         Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
@@ -159,7 +164,7 @@
         });
       });
 
-      disconnect.addEventListener("click", function (e) {
+      disconnectElement.addEventListener("click", function (e) {
         Homey.api('POST', '/disconnectAlexa', undefined, (err, result) => {
           if (err) return Homey.alert(err);
 

@@ -65,12 +65,20 @@ class EchoDevice extends Homey.Device {
       if (isOnline) {
         this.log(`[checkStatus] Device ${this.getName()} is online.`);
         await this.setAvailable().catch(this.error);
+
+        const onlineStateTrigger = this.homey.flow.getDeviceTriggerCard('state-online');
+        await onlineStateTrigger.trigger(this);
       } else {
         this.error(`[checkStatus] Device ${this.getName()} is offline.`);
         await this.setUnavailable(this.homey.__("error.offline")).catch(this.error);
+
+        const offlineStateTrigger = this.homey.flow.getDeviceTriggerCard('state-offline');
+        await offlineStateTrigger.trigger(this);
       }
-    } catch (error) {
-      this.error('[checkStatus] Error:', error);
+
+      await this.setStoreValue('lastIsOnline', isOnline).catch(this.error);
+    } catch (err) {
+      this.error(`[connectionStateChanged] Error while checking device status:`, err);
     }
   }
 
@@ -401,11 +409,36 @@ class EchoDevice extends Homey.Device {
       }
     });
 
-    this.homey.app.echoConnect.on('alexaCalled', async (alexaCallData) => {
-      // Check if this event is for this specific device
-      if (this.getData().id === alexaCallData.deviceSerial) {
-        await this.setAvailable().catch(this.error);
-      }
+    // this.homey.app.echoConnect.on('connectionStateChanged', async (state) => {
+    //   this.log('Device - connectionStateChanged event received:', state);
+    //   // Check if this event is for this specific device
+    //   if (this.getData().id !== state.deviceSerialNumber) {
+    //     return;
+    //   }
+
+    //   const isOnline = state.connectionState === 'ONLINE';
+    //   this.log(`[connectionStateChanged] Device ${this.getName()} is ${isOnline ? 'online' : 'offline'}.`);
+
+    //   try {
+    //     if (isOnline) {
+    //       await this.setAvailable();
+
+    //       const onlineStateTrigger = this.homey.flow.getDeviceTriggerCard('state-online');
+    //       await onlineStateTrigger.trigger(this);
+    //     } else {
+    //       await this.setUnavailable(this.homey.__('error.offline'));
+
+    //       const offlineStateTrigger = this.homey.flow.getDeviceTriggerCard('state-offline');
+    //       await offlineStateTrigger.trigger(this);
+    //     }
+    //   } catch (err) {
+    //     this.error(`[connectionStateChanged] Error while checking device status:`, err);
+    //   }
+    // });
+
+    this.homey.app.echoConnect.on('pushConnected', async () => {
+      this.log('Device - pushConnected event received');
+      await this._initEchoDevices(this.getData().id);
     });
   }
 

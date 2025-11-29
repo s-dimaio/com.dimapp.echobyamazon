@@ -226,7 +226,7 @@ module.exports = {
     try {
       validateApiParams({ homey });
 
-      const isPushConnected = homey.app.echoConnect.isPushConnected();
+      const isPushConnected = await homey.app.echoConnect.verifyPushConnectionWithPing();
 
       console.log(`API - getWebSocketStatus - connection status: ${isPushConnected ? 'connected' : 'disconnected'}`);
 
@@ -337,24 +337,24 @@ module.exports = {
    * Initialize push message connection
    * @param {Object} params - The parameters object
    * @param {Object} params.homey - The Homey object
-   * @returns {Promise<Object>} Initialization result
+   * @returns {Object} Initialization result
    * @throws {ApiError} If initialization fails
    * @example
-   * const result = await initPushConnection({ homey });
+   * const result = initPushConnection({ homey });
    */
-  async initPushConnection({ homey }) {
+  initPushConnection({ homey }) {
     console.log('API - initPushConnection - called');
 
     try {
       validateApiParams({ homey });
 
-      await homey.app.echoConnect.initPushMessage();
+      homey.app.echoConnect.initPushMessage();
 
-      console.log('API - initPushConnection - push connection initialized successfully');
+      console.log('API - initPushConnection - push connection initialized (async event)');
 
       return {
         success: true,
-        message: 'Push connection initialized successfully',
+        message: 'Push connection initialization started (check event for completion)',
         timestamp: new Date().toISOString()
       };
 

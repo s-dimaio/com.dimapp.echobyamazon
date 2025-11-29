@@ -448,12 +448,16 @@ class EchoDriver extends Homey.Driver {
             if (isAuthenticated) {
               this.log('You are already authenticated on Alexa servers');
 
-              const isPushConnected = this.homey.app.echoConnect.isPushConnected();
+              // const isPushConnected = this.homey.app.echoConnect.isPushConnected();
 
-              if (isPushConnected === false) {
-                this.log('initPushMessage called!')
-                this.homey.app.echoConnect.initPushMessage()
-              }
+              // if (isPushConnected === false) {
+              //   this.log('initPushMessage called!')
+              //   this.homey.app.echoConnect.initPushMessage()
+              // }
+
+              // Test - call initPushMessage every time
+              this.log('initPushMessage called!')
+              this.homey.app.echoConnect.initPushMessage()
 
               device.setAvailable().catch(this.error);
               session.done();

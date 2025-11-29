@@ -18,6 +18,7 @@
     }
   },
   "settings": {
+    "uniqueId": "App Unique ID",
     "connection": {
       "title": "Connection Status",
       "server": {

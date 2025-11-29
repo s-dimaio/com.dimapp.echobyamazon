@@ -1,11 +1,10 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.dimapp.echobyamazon",
-  "version": "2.5.0",
+  "version": "2.6.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
-    "cloud",
     "local"
   ],
   "name": {
@@ -41,6 +40,10 @@
       "method": "GET",
       "path": "/getWebSocketStatus"
     },
+    "initPushConnection": {
+      "method": "POST",
+      "path": "/initPushConnection"
+    },
     "disconnectAlexa": {
       "method": "POST",
       "path": "/disconnectAlexa"
@@ -66,6 +69,106 @@
           "it": "Rileva quando Alexa si disconnette dal server"
         },
         "id": "alexa-disconnect"
+      },
+      {
+        "id": "echo-activity",
+        "title": {
+          "en": "Echo starts an activity",
+          "it": "Echo inizia un'attività"
+        },
+        "hint": {
+          "en": "Triggered when yout Echo device start an activity",
+          "it": "Si attiva quando il tuo dispositivo Echo risponde ad un comando"
+        },
+        "tokens": [
+          {
+            "type": "string",
+            "name": "command",
+            "title": {
+              "en": "Command",
+              "it": "Comando"
+            },
+            "example": {
+              "en": "What time is it?",
+              "it": "Che ore sono?"
+            }
+          },
+          {
+            "type": "string",
+            "name": "response",
+            "title": {
+              "en": "Response",
+              "it": "Risposta"
+            },
+            "example": {
+              "en": "It's eight o'clock",
+              "it": "Sono le otto in punto"
+            }
+          },
+          {
+            "type": "string",
+            "name": "domain",
+            "title": {
+              "en": "Domain"
+            },
+            "example": {
+              "en": "Global"
+            }
+          },
+          {
+            "type": "string",
+            "name": "intent",
+            "title": {
+              "en": "Intent"
+            },
+            "example": {
+              "en": "WhatTimeIntent"
+            }
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          }
+        ]
+      },
+      {
+        "id": "state-online",
+        "title": {
+          "en": "Your Echo is back online",
+          "it": "Il tuo Echo torna online"
+        },
+        "hint": {
+          "en": "Triggered when your Echo device is back online",
+          "it": "Si attiva quando il tuo dispositivo Echo torna online"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          }
+        ]
+      },
+      {
+        "id": "state-offline",
+        "title": {
+          "en": "Your Echo is offline",
+          "it": "Il tuo Echo è andato offline"
+        },
+        "hint": {
+          "en": "Triggered when your Echo device is offline",
+          "it": "Si attiva quando il tuo dispositivo Echo va offline"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=echo"
+          }
+        ]
       }
     ],
     "actions": [
@@ -369,12 +472,9 @@
         "echo_groups"
       ],
       "platforms": [
-        "cloud",
         "local"
       ],
-      "connectivity": [
-        "cloud"
-      ],
+      "connectivity": [],
       "images": {
         "small": "/drivers/echo/assets/images/small.png",
         "large": "/drivers/echo/assets/images/large.png",

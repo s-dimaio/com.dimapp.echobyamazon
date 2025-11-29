@@ -1,12 +1,12 @@
 {
   "name": "com.dimapp.echobyamazon",
-  "version": "1.0.0",
+  "version": "2.6.2",
   "main": "app.js",
   "scripts": {},
   "devDependencies": {
     "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.12"
   },
   "dependencies": {
-    "alexa-remote2": "^8.0.2"
+    "alexa-remote2": "git+https://github.com/s-dimaio/alexa-remote.git"
   }
 }
