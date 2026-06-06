@@ -4,6 +4,7 @@ const Homey = require('homey');
 const crypto = require('crypto');
 const { EchoConnect } = require('./lib/EchoConnect')
 const { TaskScheduler } = require('./lib/TaskScheduler');
+const FileLogger = require('./lib/FileLogger');
 
 
 class EchoApp extends Homey.App {
@@ -95,6 +96,9 @@ class EchoApp extends Homey.App {
 
     this.echoConnect.on('alexaConnected', async (echoDevices) => {
       this.log('[registerAlexaListener] alexaConnected listener - Initialization completed - devices found:', echoDevices.length);
+
+      // Enable all devices when Alexa is successfully connected
+      this.disableAllDevices = false;
 
       const isPushConnected = this.echoConnect.isPushConnected();
       this.log('[registerAlexaListener] alexaConnected listener - isPushConnected: ', isPushConnected);
@@ -211,7 +215,19 @@ class EchoApp extends Homey.App {
     const installationId = this._getInstallUniqueId();
     this.log('[onInit] Installation ID:', installationId);
 
-    this.echoConnect = new EchoConnect(EchoApp.DEBUG_MODE, installationId);
+    // Initialize FileLogger if enableFileLogging setting is enabled
+    this.fileLogger = null;
+    const enableFileLogging = this.homey.settings.get('enableFileLogging') === true;
+    if (enableFileLogging) {
+      this.fileLogger = new FileLogger(this.homey, { clearOnStart: false });
+      this.log('[onInit] FileLogger initialized - logging to /userdata/echo_debug.log');
+    }
+
+    this.echoConnect = new EchoConnect(
+      EchoApp.DEBUG_MODE, 
+      installationId, 
+      this.fileLogger
+    );
 
     this.alexaCalledToken = null;
     this._registerAlexaListener();
@@ -263,7 +279,8 @@ class EchoApp extends Homey.App {
         this.log("[onInit] Scheduler: Task finished.");
       },                              // Define an asynchronous task
       EchoApp.SCHEDULER_INTERVAL,     // Set scheduler interval (4 hours)
-      false);                         // Enable/Disable logging
+      EchoApp.DEBUG_MODE,             // Enable/Disable logging
+      this.fileLogger);               // Pass FileLogger instance (null if FILE_LOG_MODE is false)
 
     // Start the scheduler
     this.scheduler.start();
@@ -292,11 +309,19 @@ class EchoApp extends Homey.App {
           case 'INVALID_SERIAL':
             throw new Error(this.homey.__("error.invalidSerial"));
 
+          case 'TEXT_TOO_LONG':
+            throw new Error(this.homey.__("error.textTooLong"));
+
+          case 'INVALID_MESSAGE':
+            throw new Error(this.homey.__("error.invalidMessage"));
+
           case 'ERROR_SPEAK':
             throw new Error(this.homey.__("error.speakCommand"));
 
           default:
-            throw new Error(this.homey.__("error.generic"));
+            // Generic error with description
+            const errorDescription = error?.message || 'Unknown error';
+            throw new Error(`${this.homey.__("error.generic")}: ${errorDescription}`);
         }
       }
     });

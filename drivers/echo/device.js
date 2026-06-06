@@ -225,25 +225,19 @@ class EchoDevice extends Homey.Device {
         case 'play':
         case 'pause':
           await this.homey.app.echoConnect.changePlayback(id, action);
-          await this._waitForEvent('playerChanged', TIMEOUTS.PLAYBACK_CHANGE);
           break;
 
         case 'next':
         case 'previous':
           await this.homey.app.echoConnect.changePlayback(id, action);
-          await this._waitForEvent('playerChanged', TIMEOUTS.PLAYBACK_CHANGE);
           break;
 
         case 'shuffle':
-          this.wsQueueChanged = false;
           await this.homey.app.echoConnect.changePlayback(id, 'shuffle', value);
-          await this._waitForEvent('queueChanged', TIMEOUTS.PLAYBACK_CHANGE);
           break;
 
         case 'repeat':
-          this.wsQueueChanged = false;
           await this.homey.app.echoConnect.changePlayback(id, 'repeat', value !== 'none');
-          await this._waitForEvent('queueChanged', TIMEOUTS.PLAYBACK_CHANGE);
           break;
       }
 
@@ -456,17 +450,11 @@ class EchoDevice extends Homey.Device {
       try {
         const isConnected = await this.homey.app.echoConnect.checkAuthenticationAndPush(cookieData, amazonPage);
         if (isConnected) {
-          this.wsVolumeChanged = false;
-
           // Set the volume of the echo
           await this.homey.app.echoConnect.setVolumeDevice(this.getData().id, (value * 100));
 
           // Set the volume of the sensor
           this.setCapabilityValue('echo_volume', value * 100).catch(this.error);
-
-          // Wait for the volumeChanged event
-          await this._waitForEvent('volumeChanged', TIMEOUTS.VOLUME_CHANGE);
-
         } else {
           await this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
         }
@@ -556,32 +544,32 @@ class EchoDevice extends Homey.Device {
     // Check if all capabilities are present
     await this._checkCapabilities();
 
-    // Check if the device is online
-    await this._checkStatus();
+    try {
+      // Initialize the websocket control variables
+      this.wsVolumeChanged = true;
+      this.wsQueueChanged = true;
 
-    if (!this.homey.app.disableAllDevices) {
-      try {
-        // Initialize the websocket control variables
-        this.wsVolumeChanged = true;
-        this.wsQueueChanged = true;
+      // Initialize one Album art for every device 
+      this.albumArt = await this.homey.images.createImage();
+      await this.setAlbumArtImage(this.albumArt);
 
-        // Initialize one Album art for every device 
-        this.albumArt = await this.homey.images.createImage();
-        await this.setAlbumArtImage(this.albumArt);
+      // Register Alexa listener
+      this._registerAlexaListener();
 
-        // Register Alexa listener
-        this._registerAlexaListener();
+      // Register Homey listener
+      this._registerHomeyListener();
 
-        // Register Homey listener
-        this._registerHomeyListener();
+      if (!this.homey.app.disableAllDevices) {
+        // Check if the device is online
+        await this._checkStatus();
 
         // Init echo devices
         await this._initEchoDevices(this.getData().id);
-      } catch (error) {
-        this.error('Error during initialization:', error);
+      } else {
+        this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
       }
-    } else {
-      this.setUnavailable(this.homey.__("error.authenticationIssues")).catch(this.error);
+    } catch (error) {
+      this.error('Error during initialization:', error);
     }
   }
 

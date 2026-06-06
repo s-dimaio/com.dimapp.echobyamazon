@@ -21,7 +21,9 @@ class EchoDriver extends Homey.Driver {
       INIT: 'ERROR_INIT',
       PUSH: 'ERROR_PUSH',
       INVALID_SERIAL: 'INVALID_SERIAL',
-      INVALID_ENABLED_SETTING: 'INVALID_ENABLED_SETTING'
+      INVALID_ENABLED_SETTING: 'INVALID_ENABLED_SETTING',
+      TEXT_TOO_LONG: 'TEXT_TOO_LONG',
+      INVALID_MESSAGE: 'INVALID_MESSAGE'
     };
   }
 
@@ -203,6 +205,14 @@ class EchoDriver extends Homey.Driver {
         this.error('Invalid device serial:', error?.message);
         throw new Error(this.homey.__("error.invalidDevice"));
 
+      case 'TEXT_TOO_LONG':
+        this.error('Text too long:', error?.message);
+        throw new Error(this.homey.__("error.textTooLong"));
+
+      case 'INVALID_MESSAGE':
+        this.error('Invalid message:', error?.message);
+        throw new Error(this.homey.__("error.invalidMessage"));
+
       case 'INVALID_ENABLED_SETTING':
         this.error('Invalid power setting:', error?.message);
         throw new Error(this.homey.__("error.invalidPowerSetting"));
@@ -216,7 +226,8 @@ class EchoDriver extends Homey.Driver {
 
       default:
         this.error(`Generic Error with ${actionType}:`, error);
-        throw new Error(this.homey.__("error.generic"));
+        const errorDescription = error?.message || 'Unknown error';
+        throw new Error(`${this.homey.__("error.generic")}: ${errorDescription}`);
     }
   }
 
@@ -408,10 +419,9 @@ class EchoDriver extends Homey.Driver {
         this.homey.app.setAlexaConnectedCallback(() => {
           this.log('device id ' + device.getData().id + ' - repaired')
 
-          device.setDeviceListener();
           device.setAvailable().catch(this.error);
 
-          session.done()
+          session.done().catch(this.error);
         });
 
         await this.homey.app.echoConnect.initAlexa({
@@ -468,9 +478,8 @@ class EchoDriver extends Homey.Driver {
               // Set AlexaConnected callback to show devices list
               this.homey.app.setAlexaConnectedCallback(() => {
                 this.log('device id ' + device.getData().id + ' - repaired');
-                //device.setDeviceListener();
                 device.setAvailable().catch(this.error);
-                session.done();
+                session.done().catch(this.error);
               });
 
               await this.homey.app.echoConnect.initAlexa({
@@ -494,7 +503,7 @@ class EchoDriver extends Homey.Driver {
     session.setHandler("disconnect", () => {
       this.log('onRepair - disconnect called')
 
-      device.setDeviceVolume(device.getData().id);
+      device._initEchoDevices(device.getData().id);
     });
   }
 

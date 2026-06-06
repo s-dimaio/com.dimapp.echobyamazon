@@ -19,6 +19,7 @@
   },
   "settings": {
     "uniqueId": "App Unique ID",
+    "saved": "Settings saved",
     "connection": {
       "title": "Connection Status",
       "server": {
@@ -39,6 +40,23 @@
     },
     "disconnect": {
       "button": "Disconnect"
+    },
+    "debug": {
+      "title": "Debug",
+      "enableFileLogging": {
+        "title": "Enable File Logging",
+        "description": "Write debug logs to a local file for troubleshooting. Disable in production to reduce resource usage."
+      },
+      "restartWarning": "Changes to this setting require an app restart to take effect.",
+      "totalSize": "Total size:",
+      "noLogFile": "No log file found. Enable file logging and restart the app to start logging.",
+      "download": "Download",
+      "delete": "Delete",
+      "deleteAll": "Delete All Logs",
+      "deleted": "deleted",
+      "filesDeleted": "log file(s) deleted",
+      "confirmDelete": "Delete this log file?",
+      "confirmDeleteAll": "Delete all log files?"
     }
   },
   "error": {
@@ -59,6 +77,8 @@
     "invalidSerial": "Invalid or empty device serial number.",
     "invalidDevice": "Invalid device or device not found.",
     "invalidPowerSetting": "Invalid power setting. Must be 'on' or 'off'.",
+    "textTooLong": "Text is too long. Maximum 250 characters allowed.",
+    "invalidMessage": "Message must be a non-empty text.",
     "speakCommand": "Error sending voice command to Echo device.",
     "generic": "Error: if the error persists try reconnecting the device.",
     "authenticationIssues": "Authentication issues: to fix try repairing the device.",

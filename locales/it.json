@@ -19,6 +19,7 @@
   },
   "settings": {
     "uniqueId": "ID Unico App",
+    "saved": "Impostazioni salvate",
     "connection": {
       "title": "Connection Status",
       "server": {
@@ -39,6 +40,23 @@
     },
     "disconnect": {
       "button": "Disconnetti"
+    },
+    "debug": {
+      "title": "Debug",
+      "enableFileLogging": {
+        "title": "Abilita Log su File",
+        "description": "Scrive i log di debug su un file locale per la risoluzione dei problemi. Disabilitare in produzione per ridurre l'utilizzo delle risorse."
+      },
+      "restartWarning": "Le modifiche a questa impostazione richiedono un riavvio dell'app per avere effetto.",
+      "totalSize": "Dimensione totale:",
+      "noLogFile": "Nessun file di log trovato. Abilita il logging su file e riavvia l'app per iniziare a registrare.",
+      "download": "Scarica",
+      "delete": "Elimina",
+      "deleteAll": "Elimina Tutti i Log",
+      "deleted": "eliminato",
+      "filesDeleted": "file di log eliminati",
+      "confirmDelete": "Eliminare questo file di log?",
+      "confirmDeleteAll": "Eliminare tutti i file di log?"
     }
   },
   "error": {
@@ -59,6 +77,8 @@
     "invalidSerial": "Numero seriale del dispositivo non valido o vuoto.",
     "invalidDevice": "Dispositivo non valido o dispositivo non trovato.",
     "invalidPowerSetting": "Impostazione di alimentazione non valida. Deve essere 'on' o 'off'.",
+    "textTooLong": "Testo troppo lungo. Massimo 250 caratteri consentiti.",
+    "invalidMessage": "Il messaggio deve essere un testo non vuoto.",
     "speakCommand": "Errore nell'invio del comando vocale al dispositivo Echo.",
     "generic": "Errore: se l'errore persiste prova a ricollegare il dispositivo.",
     "authenticationIssues": "Problemi di autenticazione: per risolvere prova a riparare il dispositivo.",

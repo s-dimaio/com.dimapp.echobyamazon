@@ -50,14 +50,119 @@
       justify-content: space-between;
       align-items: center;
     }
+
+    /* Debug section styles */
+    .warning-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #856404;
+    }
+
+    .log-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--homey-border-color, #eee);
+    }
+
+    .log-summary {
+      font-size: 13px;
+      color: var(--homey-text-color-light, #666);
+      margin-bottom: 12px;
+    }
+
+    .log-summary .total-size {
+      font-weight: 500;
+      color: var(--homey-text-color, #333);
+    }
+
+    .log-file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .log-file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: var(--homey-background-secondary, #f5f5f5);
+      border-radius: 8px;
+      border: 1px solid var(--homey-border-color, #eee);
+    }
+
+    .log-file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .log-file-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--homey-text-color, #333);
+      word-break: break-all;
+    }
+
+    .log-file-meta {
+      font-size: 11px;
+      color: var(--homey-text-color-light, #666);
+      margin-top: 4px;
+    }
+
+    .log-file-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: 12px;
+      flex-shrink: 0;
+    }
+
+    .no-log {
+      font-size: 13px;
+      color: var(--homey-text-color-light, #666);
+      font-style: italic;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .save-status {
+      text-align: center;
+      padding: 8px;
+      font-size: 12px;
+      color: #4CAF50;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .save-status.visible {
+      opacity: 1;
+    }
+
+    .delete-all-section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--homey-border-color, #eee);
+    }
   </style>
 </head>
 
 <body>
   <div class="content">
     <div class="homey-form-group">
-      <label class="homey-form-label" for="installUniqueId" data-i18n="settings.uniqueId"></label>
-      <input class="homey-form-input" id="installUniqueId" type="text" value="" readonly />
+      <fieldset class="homey-form-fieldset">
+        <div class="homey-form-legend-container">
+          <legend class="homey-form-legend" data-i18n="settings.uniqueId"></legend>
+        </div>
+        <div style="margin-top: 10px;">
+          <input class="homey-form-input" id="installUniqueId" type="text" value="" readonly />
+        </div>
+      </fieldset>
     </div>
 
     <div class="homey-form-group">
@@ -90,6 +195,59 @@
         </div>
       </fieldset>
     </div>
+
+    <!-- Debug Section -->
+    <div class="homey-form-group">
+      <fieldset class="homey-form-fieldset">
+        <legend class="homey-form-legend" data-i18n="settings.debug.title">Debug</legend>
+
+        <div class="homey-form-group">
+          <fieldset class="homey-form-checkbox-set">
+            <label class="homey-form-checkbox">
+              <input class="homey-form-checkbox-input" type="checkbox" id="enableFileLogging"
+                name="enableFileLogging" />
+              <span class="homey-form-checkbox-checkmark"></span>
+              <span class="homey-form-checkbox-text" data-i18n="settings.debug.enableFileLogging.title">Enable File
+                Logging</span>
+            </label>
+          </fieldset>
+          <p class="homey-subtitle" data-i18n="settings.debug.enableFileLogging.description">
+            Write debug logs to a local file for troubleshooting. Disable in production to reduce resource usage.
+          </p>
+        </div>
+
+        <div class="warning-box">
+          <span data-i18n="settings.debug.restartWarning">Changes to this setting require an app restart to take
+            effect.</span>
+        </div>
+
+        <!-- Log files section -->
+        <div class="log-section">
+          <div id="logExists" class="hidden">
+            <div class="log-summary">
+              <span data-i18n="settings.debug.totalSize">Total size:</span>
+              <span id="totalSize" class="total-size"></span>
+              <span id="fileCount"></span>
+            </div>
+
+            <div id="logFileList" class="log-file-list">
+              <!-- Log files will be dynamically inserted here -->
+            </div>
+
+            <div id="deleteAllSection" class="delete-all-section hidden">
+              <button type="button" class="homey-button-danger-small" id="btnDeleteAll"
+                data-i18n="settings.debug.deleteAll">Delete All Logs</button>
+            </div>
+          </div>
+
+          <div id="noLog" class="no-log hidden" data-i18n="settings.debug.noLogFile">
+            No log file found. Enable file logging and restart the app to start logging.
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="save-status" id="saveStatus" data-i18n="settings.saved">Settings saved</div>
   </div>
 
   <div class="footer">
@@ -110,12 +268,28 @@
       var refreshElement = document.getElementById("refresh");
       //var reconnectWSElement = document.getElementById("reconnectWS");
 
+      // Debug section elements
+      var enableFileLoggingEl = document.getElementById('enableFileLogging');
+      var saveStatusEl = document.getElementById('saveStatus');
+      var logExistsEl = document.getElementById('logExists');
+      var noLogEl = document.getElementById('noLog');
+      var totalSizeEl = document.getElementById('totalSize');
+      var fileCountEl = document.getElementById('fileCount');
+      var logFileListEl = document.getElementById('logFileList');
+      var deleteAllSectionEl = document.getElementById('deleteAllSection');
+      var btnDeleteAll = document.getElementById('btnDeleteAll');
+
       // Load the stored setting and populate the input on load
       Homey.get("installUniqueId", function (err, value) {
         if (err) return Homey.alert(err);
         installUniqueIdElement.value = value || "";
       });
 
+      // Load enableFileLogging setting
+      Homey.get('enableFileLogging', function (err, value) {
+        if (err) return Homey.alert(err);
+        enableFileLoggingEl.checked = value === true;
+      });
 
       Homey.api('GET', '/getServerStatus', undefined, (err, result) => {
         if (err) return Homey.alert(err);
@@ -126,6 +300,184 @@
         if (err) return Homey.alert(err);
         wsElement.textContent = result.msg;
       });
+
+      // Format date for display
+      function formatDate(isoString) {
+        var date = new Date(isoString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      }
+
+      // Create a log file item element
+      function createLogFileItem(file) {
+        var item = document.createElement('div');
+        item.className = 'log-file-item';
+        item.dataset.index = file.index;
+
+        item.innerHTML =
+          '<div class="log-file-info">' +
+          '<div class="log-file-name">' + file.name + '</div>' +
+          '<div class="log-file-meta">' + file.sizeFormatted + ' • ' + formatDate(file.modified) + '</div>' +
+          '</div>' +
+          '<div class="log-file-actions">' +
+          '<button type="button" class="homey-button-secondary-small" data-action="download" data-index="' + file.index + '" data-i18n="settings.debug.download">Download</button>' +
+          '<button type="button" class="homey-button-danger-small" data-action="delete" data-index="' + file.index + '" data-i18n="settings.debug.delete">Delete</button>' +
+          '</div>';
+
+        return item;
+      }
+
+      // Check log file status
+      function checkLogStatus() {
+        Homey.api('GET', '/log/status', null, function (err, result) {
+          if (err) {
+            console.error('Error checking log status:', err);
+            noLogEl.classList.remove('hidden');
+            logExistsEl.classList.add('hidden');
+            return;
+          }
+
+          if (result.exists && result.files && result.files.length > 0) {
+            logExistsEl.classList.remove('hidden');
+            noLogEl.classList.add('hidden');
+
+            // Update summary
+            totalSizeEl.textContent = result.totalSizeFormatted;
+            fileCountEl.textContent = '(' + result.files.length + ' ' + (result.files.length === 1 ? 'file' : 'files') + ')';
+
+            // Clear and rebuild file list
+            logFileListEl.innerHTML = '';
+            result.files.forEach(function (file) {
+              logFileListEl.appendChild(createLogFileItem(file));
+            });
+
+            // Show "Delete All" button only if more than 1 file
+            if (result.files.length > 1) {
+              deleteAllSectionEl.classList.remove('hidden');
+            } else {
+              deleteAllSectionEl.classList.add('hidden');
+            }
+          } else {
+            noLogEl.classList.remove('hidden');
+            logExistsEl.classList.add('hidden');
+          }
+        });
+      }
+
+      checkLogStatus();
+
+      // Save enableFileLogging on change
+      enableFileLoggingEl.addEventListener('change', function () {
+        var value = enableFileLoggingEl.checked;
+        Homey.set('enableFileLogging', value, function (err) {
+          if (err) return Homey.alert(err);
+
+          // Show save confirmation
+          showStatus(Homey.__('settings.saved') || 'Settings saved');
+        });
+      });
+
+      // Handle download action for a specific file
+      function downloadFile(index, button) {
+        button.disabled = true;
+
+        Homey.api('GET', '/log/download/' + index, null, function (err, result) {
+          button.disabled = false;
+
+          if (err) {
+            Homey.alert('Error downloading log: ' + err);
+            return;
+          }
+
+          // result is directly the URL string
+          Homey.openURL(result);
+        });
+      }
+
+      // Handle delete action for a specific file
+      function deleteFile(index, button) {
+        var fileName = button.closest('.log-file-item').querySelector('.log-file-name').textContent;
+
+        Homey.confirm(Homey.__('settings.debug.confirmDelete') || 'Delete "' + fileName + '"?', 'warning', function (err, confirmed) {
+          if (err) return;
+          if (!confirmed) return;
+
+          button.disabled = true;
+
+          Homey.api('DELETE', '/log/' + index, null, function (err, result) {
+            button.disabled = false;
+
+            if (err) {
+              Homey.alert('Error deleting log: ' + err);
+              return;
+            }
+
+            if (!result.success) {
+              Homey.alert(result.error || 'Failed to delete log');
+              return;
+            }
+
+            // Refresh status
+            checkLogStatus();
+
+            // Show confirmation
+            showStatus('"' + result.deletedFile + '" ' + (Homey.__('settings.debug.deleted') || 'deleted'));
+          });
+        });
+      }
+
+      // Event delegation for file actions
+      logFileListEl.addEventListener('click', function (e) {
+        var button = e.target.closest('button[data-action]');
+        if (!button) return;
+
+        var action = button.dataset.action;
+        var index = button.dataset.index;
+
+        if (action === 'download') {
+          downloadFile(index, button);
+        } else if (action === 'delete') {
+          deleteFile(index, button);
+        }
+      });
+
+      // Delete all logs
+      btnDeleteAll.addEventListener('click', function () {
+        Homey.confirm(Homey.__('settings.debug.confirmDeleteAll') || 'Delete all log files?', 'warning', function (err, confirmed) {
+          if (err) return;
+          if (!confirmed) return;
+
+          btnDeleteAll.disabled = true;
+
+          Homey.api('DELETE', '/log/all', null, function (err, result) {
+            btnDeleteAll.disabled = false;
+
+            if (err) {
+              Homey.alert('Error deleting logs: ' + err);
+              return;
+            }
+
+            if (!result.success) {
+              Homey.alert(result.error || 'Failed to delete logs');
+              return;
+            }
+
+            // Refresh status
+            checkLogStatus();
+
+            // Show confirmation
+            showStatus(result.deletedCount + ' ' + (Homey.__('settings.debug.filesDeleted') || 'log file(s) deleted'));
+          });
+        });
+      });
+
+      // Show status message
+      function showStatus(message) {
+        saveStatusEl.textContent = message;
+        saveStatusEl.classList.add('visible');
+        setTimeout(function () {
+          saveStatusEl.classList.remove('visible');
+        }, 2000);
+      }
 
       // reconnectWSElement.addEventListener("click", function (e) {
       //   Homey.api('POST', '/initPushConnection', undefined, (err, result) => {

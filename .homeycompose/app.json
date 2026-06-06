@@ -1,59 +1,77 @@
-{
-  "id": "com.dimapp.echobyamazon",
-  "version": "2.6.2",
-  "compatibility": ">=5.0.0",
-  "sdk": 3,
-  "platforms": [
-    "local"
-  ],
-  "name": {
-    "en": "Echo by Amazon"
-  },
-  "description": {
-    "en": "App to control Echo device"
-  },
-  "category": [
-    "tools"
-  ],
-  "permissions": [],
-  "images": {
-    "small": "/assets/images/small.png",
-    "large": "/assets/images/large.png",
-    "xlarge": "/assets/images/xlarge.png"
-  },
-  "author": {
-    "name": "Simone Di Maio",
-    "email": "simone.dimaio77@gmail.com"
-  },
-  "brandColor": "#232f3e",
-  "api": {
-    "createDevicesFile": {
-      "method": "POST",
-      "path": "/createDevicesFile"
-    },
-    "getServerStatus": {
-      "method": "GET",
-      "path": "/getServerStatus"
-    },
-    "getWebSocketStatus": {
-      "method": "GET",
-      "path": "/getWebSocketStatus"
-    },
-    "initPushConnection": {
-      "method": "POST",
-      "path": "/initPushConnection"
-    },
-    "disconnectAlexa": {
-      "method": "POST",
-      "path": "/disconnectAlexa"
-    },
-    "getSystemStatus": {
-      "method": "GET",
-      "path": "/getSystemStatus"
-    },
-    "healthCheck": {
-      "method": "GET",
-      "path": "/healthCheck"
-    }
-  }
+﻿{
+    "id":  "com.dimapp.echobyamazon",
+    "version":  "2.6.3",
+    "compatibility":  "\u003e=5.0.0",
+    "sdk":  3,
+    "platforms":  [
+                      "local"
+                  ],
+    "name":  {
+                 "en":  "Echo by Amazon"
+             },
+    "description":  {
+                        "en":  "App to control Echo device"
+                    },
+    "category":  [
+                     "tools"
+                 ],
+    "permissions":  [
+
+                    ],
+    "images":  {
+                   "small":  "/assets/images/small.png",
+                   "large":  "/assets/images/large.png",
+                   "xlarge":  "/assets/images/xlarge.png"
+               },
+    "author":  {
+                   "name":  "Simone Di Maio",
+                   "email":  "simone.dimaio77@gmail.com"
+               },
+    "brandColor":  "#232f3e",
+    "api":  {
+                "createDevicesFile":  {
+                                          "method":  "POST",
+                                          "path":  "/createDevicesFile"
+                                      },
+                "getServerStatus":  {
+                                        "method":  "GET",
+                                        "path":  "/getServerStatus"
+                                    },
+                "getWebSocketStatus":  {
+                                           "method":  "GET",
+                                           "path":  "/getWebSocketStatus"
+                                       },
+                "initPushConnection":  {
+                                           "method":  "POST",
+                                           "path":  "/initPushConnection"
+                                       },
+                "disconnectAlexa":  {
+                                        "method":  "POST",
+                                        "path":  "/disconnectAlexa"
+                                    },
+                "getSystemStatus":  {
+                                        "method":  "GET",
+                                        "path":  "/getSystemStatus"
+                                    },
+                "healthCheck":  {
+                                    "method":  "GET",
+                                    "path":  "/healthCheck"
+                                },
+                "getLogStatus":  {
+                                     "method":  "GET",
+                                     "path":  "/log/status"
+                                 },
+                "getLogDownloadFile":  {
+                                           "method":  "GET",
+                                           "path":  "/log/download/:index"
+                                       },
+                "deleteLogFile":  {
+                                      "method":  "DELETE",
+                                      "path":  "/log/:index"
+                                  },
+                "deleteAllLogs":  {
+                                      "method":  "DELETE",
+                                      "path":  "/log/all"
+                                  }
+            }
 }
