@@ -497,11 +497,24 @@ class EchoDevice extends Homey.Device {
   }
 
   /**
-   * Initialize Echo device state and capabilities
-   * @param {string} id - Device ID
+   * Initialize Echo device state and capabilities.
+   * This is a private method.
+   * 
+   * @param {string} id - The unique identifier of the Echo device (mandatory).
+   * @returns {Promise<void>} Resolves when initialization is complete.
    * @private
+   * 
+   * @example
+   * await this._initEchoDevices('G090XG09948232KQ');
    */
   async _initEchoDevices(id) {
+    const now = Date.now();
+    if (this._lastInitTime && (now - this._lastInitTime < 5000)) {
+      this.log(`[initEchoDevices] Skipping duplicate initialization (last was ${(now - this._lastInitTime) / 1000}s ago)`);
+      return;
+    }
+    this._lastInitTime = now;
+
     try {
       // Get initial volume
       const volume = await this.homey.app.echoConnect.getVolumeDevice(id);

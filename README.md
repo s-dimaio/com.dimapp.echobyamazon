@@ -39,20 +39,26 @@ This Homey Pro app allows you to control your Echo devices through your Homey sm
 - **Playback Status**: Monitor what's currently playing (artist, album, track)
 - **Connection Status**: Monitor Alexa server and WebSocket connections
 
-## Installation
+## Installation & Local Development
 
-To get started with Alexa by Echo, follow these steps:
-
+### Standard Run (Using GitHub version)
+To run the app using the dependency version from GitHub:
 1. Install the dependencies:
 ```sh
 npm install
 ```
-
-2. Start the app in Homey Pro:
+2. Run the app in Homey Pro:
 ```sh
-homey app run
+npm run run:github
 ```
 
+### Local Development / Debugging
+If you are developing or debugging the `alexa-remote2` library locally (at `D:\Workspace\VSCode\alexa-remote`) and want to test changes in this Homey app without pushing them to GitHub:
+1. Run the app with local library synchronization:
+```sh
+npm run run:local
+```
+This script will copy the updated local source files directly into `node_modules/alexa-remote2` before starting the Homey app.
 
 Note: Make sure you have Node.js and npm (Node Package Manager) installed on your system before proceeding with the installation.
 

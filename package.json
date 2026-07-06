@@ -1,14 +1,15 @@
-﻿{
-    "name":  "com.dimapp.echobyamazon",
-    "version":  "2.6.3",
-    "main":  "app.js",
-    "scripts":  {
-
-                },
-    "devDependencies":  {
-                            "@types/homey":  "npm:homey-apps-sdk-v3-types@^0.3.12"
-                        },
-    "dependencies":  {
-                         "alexa-remote2":  "git+https://github.com/s-dimaio/alexa-remote.git"
-                     }
+{
+    "name": "com.dimapp.echobyamazon",
+    "version": "2.6.5",
+    "main": "app.js",
+    "scripts": {
+        "run:local": "node dev-scripts/sync-local-lib.js && homey app run --r",
+        "run:github": "npm install && homey app run --r"
+    },
+    "devDependencies": {
+        "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.12"
+    },
+    "dependencies": {
+        "alexa-remote2": "git+https://github.com/s-dimaio/alexa-remote.git"
+    }
 }

@@ -7,4 +7,5 @@
 /log/
 /view.txt
 *.bck
+*.code-workspace
 /release.ps1
